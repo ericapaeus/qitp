@@ -1,4 +1,5 @@
-import Image from "next/image";
+'use client'
+
 import { Card } from '@/components/ui/card'
 import {
   Activity,
@@ -69,7 +70,7 @@ const activities = [
   },
 ]
 
-export default function Home() {
+export default function HomePage() {
   return (
     <div className="space-y-6">
       {/* 统计卡片 */}
@@ -149,5 +150,5 @@ export default function Home() {
         </div>
       </Card>
     </div>
-  );
+  )
 }
