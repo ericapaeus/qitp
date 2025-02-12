@@ -213,4 +213,16 @@ CREATE TABLE test_results (
 
 3. 性能优化
    - 附件存储
-   - 查询优化 
+   - 查询优化
+
+## 9. 页面路径
+
+1. 检验任务页面
+   - 路径: `/laboratory/tasks`
+   - 文件: `src/app/laboratory/tasks/page.tsx`
+   - 功能: 检验任务分配、查询等操作
+
+2. 检验结果页面
+   - 路径: `/laboratory/results`
+   - 文件: `src/app/laboratory/results/page.tsx`
+   - 功能: 检验结果记录、审核等操作 

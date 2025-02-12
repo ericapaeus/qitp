@@ -18,7 +18,19 @@
 2. 能够查看企业引种历史
 3. 能够统计引种数据
 
-## 3. 数据模型
+## 3. 页面路径
+
+1. 企业信息页面
+   - 路径: `/enterprises`
+   - 文件: `src/app/enterprises/page.tsx`
+   - 功能: 展示企业基本信息列表，支持查询、同步等操作
+
+2. 引种记录页面
+   - 路径: `/enterprises/imports`
+   - 文件: `src/app/enterprises/imports/page.tsx`
+   - 功能: 展示企业引种记录列表，支持查询、跟踪等操作
+
+## 4. 数据模型
 
 ```typescript
 // 引种企业
@@ -66,9 +78,9 @@ interface ImportRecord {
 }
 ```
 
-## 4. 功能设计
+## 5. 功能设计
 
-### 4.1 企业信息同步
+### 5.1 企业信息同步
 1. 自动同步
    - 每日自动同步
    - 同步出错通知
@@ -77,7 +89,7 @@ interface ImportRecord {
    - 手动触发同步
    - 显示同步结果
 
-### 4.2 引种记录管理
+### 5.2 引种记录管理
 1. 记录查询
    - 按状态查询
    - 按时间查询
@@ -86,7 +98,7 @@ interface ImportRecord {
    - 查看当前状态
    - 接收状态通知
 
-## 5. 接口定义
+## 6. 接口定义
 
 ```typescript
 // 企业列表
@@ -143,7 +155,7 @@ GET /api/enterprises/:id/import-records/:recordId
 Response: ImportRecord
 ```
 
-## 6. 数据库设计
+## 7. 数据库设计
 
 ```sql
 -- 企业信息表

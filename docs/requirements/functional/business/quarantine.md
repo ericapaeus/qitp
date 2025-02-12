@@ -309,4 +309,16 @@ CREATE TABLE sync_logs (
 3. 性能考虑
    - 同步任务性能优化
    - 大量数据查询优化
-   - 统计查询性能优化 
+   - 统计查询性能优化
+
+## 9. 页面路径
+
+1. 检疫机构页面
+   - 路径: `/quarantine/organizations`
+   - 文件: `src/app/quarantine/organizations/page.tsx`
+   - 功能: 检疫机构信息管理、同步等操作
+
+2. 检疫人员页面
+   - 路径: `/quarantine/staff`
+   - 文件: `src/app/quarantine/staff/page.tsx`
+   - 功能: 检疫人员管理、资质管理等操作 

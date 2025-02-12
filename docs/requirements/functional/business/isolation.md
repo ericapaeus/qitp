@@ -490,4 +490,21 @@ CREATE TABLE attachments (
 3. 性能优化
    - 大量图片的存储和访问优化
    - 历史数据的归档策略
-   - 报表生成的性能优化 
+   - 报表生成的性能优化
+
+## 9. 页面路径
+
+1. 样品接收页面
+   - 路径: `/isolation/samples`
+   - 文件: `src/app/isolation/samples/page.tsx`
+   - 功能: 样品接收登记、查询等操作
+
+2. 试种管理页面
+   - 路径: `/isolation/plants`
+   - 文件: `src/app/isolation/plants/page.tsx`
+   - 功能: 试种过程记录、进度跟踪等操作
+
+3. 检疫处理页面
+   - 路径: `/isolation/quarantine`
+   - 文件: `src/app/isolation/quarantine/page.tsx`
+   - 功能: 检疫处理记录、结果登记等操作 

@@ -26,6 +26,7 @@
 - 先建立代码功能框架，再逐个实现页面功能。
 - 当遇到问题反复尝试无果时，请及时向我求助，不要为了达成目的使用不理想的方案。
 - 在生成界面时，解决Linter错误，确保代码规范。无法解决必要使用 `ignore` 注释时，必须先经过我同意。
+- 在进行样式设计的调整时，请更新相应组件的样式，确保样式的一致性。
 ```
 
 ### Logs
@@ -54,4 +55,103 @@ coding...
 我明白您的需求。我需要将已创建的页面路径添加到功能需求文档中，建立需求和实现的对应关系。让我来更新相应的文档。
 
 docing...
+
+我已经将所有创建的页面路径信息添加到相应的功能需求文档中。现在每个功能模块的文档都包含了对应的页面路径信息，包括：
+企业管理模块 (docs/requirements/functional/business/enterprise.md)
+企业信息页面 /enterprises
+引种记录页面 /enterprises/imports
+隔离试种模块 (docs/requirements/functional/business/isolation.md)
+样品接收页面 /isolation/samples
+试种管理页面 /isolation/plants
+检疫处理页面 /isolation/quarantine
+实验室检验模块 (docs/requirements/functional/business/laboratory.md)
+检验任务页面 /laboratory/tasks
+检验结果页面 /laboratory/results
+表单管理模块 (docs/requirements/functional/business/forms.md)
+表单模板页面 /forms/templates
+表单记录页面 /forms/records
+数据分析模块 (docs/requirements/functional/analysis/index.md)
+统计报表页面 /analysis/statistics
+数据导出页面 /analysis/export
+系统管理模块 (docs/requirements/functional/system/index.md)
+用户管理页面 /settings/users
+角色权限页面 /settings/roles
+基础数据页面 /settings/base-data
+每个页面路径信息都包含了：
+路径 URL
+对应的源代码文件位置
+主要功能说明
+这样的文档结构可以帮助我们：
+清晰地看到需求和实现的对应关系
+方便后续开发和维护
+便于团队成员理解系统结构
+接下来我们可以开始实现具体的页面功能了。您觉得应该从哪个模块开始？
 ```
+
+**Prompt-Review**
+
+```
+请再检查一遍所有的页面和功能是否都有对应
+```
+
+
+**AI-Assistant**
+
+```
+……
+```
+
+**Prompt-Review**
+
+```
+更新侧边栏导航，确保全部页面路由正常。
+```
+
+**AI-Assistant**
+
+```
+……
+现在所有页面都可以通过侧边栏导航访问。接下来我们可以开始实现具体的页面功能了。建议从核心业务流程开始，按照以下顺序实现：
+企业管理 - 因为这是数据源头
+检疫机构 - 因为这是业务执行主体
+隔离试种 - 核心业务流程
+实验室检验 - 配套业务流程
+表单管理 - 业务记录支持
+数据分析 - 数据统计和导出
+系统设置 - 基础支持功能
+您觉得这个实现顺序合适吗？或者您有其他的优先级考虑？
+```
+
+**Prompt-Review**
+
+```
+npm run dev 预览页面效果
+```
+
+**AI-Assistant**
+
+```
+好的，我来帮您启动开发服务器预览页面效果。
+$ npm run dev
+```
+
+**Prompt-Review**
+
+```
+我发现两个问题：
+1. 面包屑导航的位置不对，且名称使用的路径名，并没有使用菜单名。
+2. 左侧边栏“首页”链接无效。
+```
+
+**AI-Assistant**
+
+```
+……
+```
+
+**Prompt-Review**
+
+```
+请检查全局样式与 @ui-design.md 的一致性
+```
+
