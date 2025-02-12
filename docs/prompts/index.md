@@ -42,10 +42,15 @@ sequenceDiagram
 
     Note over S: 初步需求
     
+    %% s1-face.md
+    rect rgba(28, 32, 44, 0.1)
     S->>+A: 需求拆解Prompt
     A->>-S: 优化需求文档
+    end
+
     Note over S: 功能需求
 
+    %% s2-page.md
     rect rgba(50, 32, 35, 0.1)
     S->>+P: 启动需求评审
 
@@ -65,6 +70,7 @@ sequenceDiagram
     end
     Note over S: 初版界面
 
+    %% s3-data.md
     rect rgba(35, 32, 50, 0.1)
     loop 示例数据生成
     P->>+A: 生成数据Prompt
@@ -79,6 +85,7 @@ sequenceDiagram
     end
     Note over S: 完整界面
 
+    %% s4-test.md
     rect rgba(32, 50, 35, 0.1)
     loop 界面自动测试
     P->>+A: 测试用例Prompt
@@ -115,4 +122,11 @@ sequenceDiagram
   - 生成测试用例、示例数据的Prompt要能够被复用，尤其是如何判定测试用例的数量、测试边界、测试数据等。
 
 > 在`Prompt-Review`的过程中，补充的需求内容、背景信息等都添加到`docs/requirements/business/additional_requirements.md`中。
+
+详细过程见：
+
+- [需求拆解](./s1-face.md)
+- [界面设计](./s2-page.md)
+- [示例数据](./s3-data.md)
+- [测试用例](./s4-test.md)
 
