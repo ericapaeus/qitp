@@ -112,12 +112,6 @@
 qitp/
 ├── docs/ # 项目文档
 │ ├── requirements/ # 需求文档
-│ │ ├── business/ # 业务需求
-│ │ ├── functional/ # 功能需求
-│ │ └── technical/ # 技术需求
-│ ├── design/ # 设计文档
-│ │ ├── architecture/ # 架构设计
-│ │ └── ui/ # 界面设计
 │ └── specs/ # 详细规格说明
 ├── src/
 │ ├── app/ # Next.js 13+ App Router
