@@ -110,6 +110,10 @@
 ## 项目结构 
 
 qitp/
+├── docs/ # 项目文档
+│ ├── api/ # API 文档
+│ ├── guides/ # 使用指南
+│ └── development/ # 开发文档
 ├── src/
 │ ├── app/ # Next.js 13+ App Router
 │ ├── components/ # 组件目录
@@ -120,8 +124,8 @@ qitp/
 │ ├── types/ # TypeScript 类型定义
 │ ├── styles/ # 全局样式
 │ └── mocks/ # Mock 数据
-│ ├── data/ # Mock 数据文件
-│ └── handlers/ # MSW 请求处理器
+│   ├── data/ # Mock 数据文件
+│   └── handlers/ # MSW 请求处理器
 └── public/ # 静态资源
 
 ## 响应指南
