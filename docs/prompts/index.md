@@ -27,31 +27,78 @@
 
 **基本流程**
 
+- `PM` 角色是项目管理，主要是协调
+- `AI-Assistant` 角色是AI，自动工作
+- `Prompt-Review` 角色是工程师，负责评审
+
 ```mermaid
-%%{init: { 'logLevel': 'debug', 'theme': 'base', 'gitGraph': {'showBranches': true, 'showCommitLabel':true,'mainBranchName': 'Customer'}} }%%
-gitGraph TB:
-    commit id: "初步调研" tag: "初步需求"
-    branch "AI-Assistant"
-    commit id: "功能拆解" tag: "功能需求" type: HIGHLIGHT
-    branch "Prompt-Review"
-    commit id: "优化需求" tag: "界面Prompt" type: REVERSE
-    checkout "AI-Assistant"
-    merge "Prompt-Review" id: "AI界面开发" tag: "初版界面" type: REVERSE
-    checkout "Prompt-Review"
-    merge "AI-Assistant" id: "优化Prompt" tag: "界面Prompt" type: HIGHLIGHT
-    checkout "AI-Assistant"
-    merge "Prompt-Review" id: "优化生成界面" tag: "系统界面"
-    checkout "Prompt-Review"
-    commit id: "业务理解" tag: "数据示例Prompt"
-    commit id: "场景分析" tag: "测试用例Prompt/脚本"
-    branch "Test"
-    commit id: "数据生成" tag: "示例数据"
-    commit id: "自动测试" tag: "Coverage"
-    checkout "AI-Assistant"
-    merge "Test" id: "mock数据" tag: "完整效果" type: HIGHLIGHT
-    checkout "Customer"
-    merge "AI-Assistant" id: "客户确认" type: HIGHLIGHT
-    commit id: "循环至客户满意" type: REVERSE
+sequenceDiagram
+    actor C as Customer
+    participant S as PM
+    participant A as AI-Assistant
+    participant P as Prompt-Review
+
+    S->>C: 前期调研
+
+    Note over S: 初步需求
+    
+    S->>+A: 需求拆解Prompt
+    A->>-S: 优化需求文档
+    Note over S: 功能需求
+
+    rect rgba(50, 32, 35, 0.1)
+    S->>+P: 启动需求评审
+
+    loop 用操作实现评审
+    P->>+A: 优化需求
+    Note over A: AI界面开发
+    A->>-P: 生成界面Prompt
+    P->>+A: 优化Prompt
+    A->>-P: 生成界面
+    end
+
+    P->>S: 评审结束
+    end
+
+    rect rgb(0, 0, 0)
+    Note right of P: 生成界面Prompt
+    end
+    Note over S: 初版界面
+
+    rect rgba(35, 32, 50, 0.1)
+    loop 示例数据生成
+    P->>+A: 生成数据Prompt
+    Note over A: AI数据生成
+    A->>-P: 提供mock数据
+    end
+
+    P->>S: 示例数据填充
+    end
+    rect rgb(0, 0, 0)
+    Note right of P: 生成数据Prompt
+    end
+    Note over S: 完整界面
+
+    rect rgba(32, 50, 35, 0.1)
+    loop 界面自动测试
+    P->>+A: 测试用例Prompt
+    Note over A: 测试用例生成
+    A->>-P: 生成测试用例
+    Note over A: 测试脚本
+    A->>A: 自动测试
+    end
+    
+    P->>S: 交付
+    end
+    rect rgb(191, 223, 255)
+    Note right of P: 测试用例Prompt
+    end
+    Note over S: 可靠界面
+    S->>C: 项目汇报
+    
+    loop 调整优化
+        S->>S: 循环至客户满意
+    end
 ```
 
 **为了高效地生成界面，这里需要重点关注的几个可复用经验：**
