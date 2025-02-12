@@ -13,47 +13,90 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
+
+// 从 Sidebar 导入菜单配置
+const menuItems = [
+  {
+    title: '首页',
+    href: '/',
+  },
+  {
+    title: '企业管理',
+    href: '/enterprises',
+    items: [
+      { title: '企业信息', href: '/enterprises' },
+      { title: '引种记录', href: '/enterprises/imports' },
+    ],
+  },
+  {
+    title: '检疫机构',
+    href: '/quarantine',
+    items: [
+      { title: '机构信息', href: '/quarantine/organizations' },
+      { title: '检疫人员', href: '/quarantine/staff' },
+    ],
+  },
+  {
+    title: '隔离试种',
+    href: '/isolation',
+    items: [
+      { title: '样品接收', href: '/isolation/samples' },
+      { title: '试种管理', href: '/isolation/plants' },
+      { title: '检疫处理', href: '/isolation/quarantine' },
+    ],
+  },
+  {
+    title: '实验室检验',
+    href: '/laboratory',
+    items: [
+      { title: '检验任务', href: '/laboratory/tasks' },
+      { title: '检验结果', href: '/laboratory/results' },
+    ],
+  },
+  {
+    title: '表单管理',
+    href: '/forms',
+    items: [
+      { title: '表单模板', href: '/forms/templates' },
+      { title: '表单记录', href: '/forms/records' },
+    ],
+  },
+  {
+    title: '数据分析',
+    href: '/analysis',
+    items: [
+      { title: '统计报表', href: '/analysis/statistics' },
+      { title: '数据导出', href: '/analysis/export' },
+    ],
+  },
+  {
+    title: '系统设置',
+    href: '/settings',
+    items: [
+      { title: '用户管理', href: '/settings/users' },
+      { title: '角色权限', href: '/settings/roles' },
+      { title: '基础数据', href: '/settings/base-data' },
+    ],
+  },
+]
 
 export default function TopNavbar() {
   const pathname = usePathname()
   const [searchQuery, setSearchQuery] = useState('')
 
-  // 生成面包屑导航
-  const breadcrumbs = pathname
-    .split('/')
-    .filter(Boolean)
-    .map((segment) => ({
-      label: segment.charAt(0).toUpperCase() + segment.slice(1),
-      href: `/${segment}`,
-    }))
-
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50">
-      <div className="flex items-center justify-between h-full px-6">
+    <header
+      className="fixed top-0 left-0 right-0 h-16 bg-white z-50"
+      style={{ boxShadow: 'var(--shadow-md)' }}
+    >
+      <div className="h-full px-6 flex items-center justify-between">
         {/* 左侧系统名称 */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Link href="/" className="text-lg font-semibold text-gray-900">
             检疫隔离试种信息管理系统
           </Link>
         </div>
-
-        {/* 中间面包屑导航 */}
-        <nav className="hidden md:flex items-center space-x-2">
-          <Link href="/" className="text-gray-600 hover:text-gray-900">
-            首页
-          </Link>
-          {breadcrumbs.map((item, index) => (
-            <div key={item.href} className="flex items-center">
-              <span className="text-gray-400 mx-2">/</span>
-              <Link
-                href={item.href}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                {item.label}
-              </Link>
-            </div>
-          ))}
-        </nav>
 
         {/* 右侧工具栏 */}
         <div className="flex items-center gap-4">
