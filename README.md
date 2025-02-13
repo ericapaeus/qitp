@@ -20,7 +20,7 @@
 - **UI 框架**: React 18+
 - **样式解决方案**: 
   - Tailwind CSS
-  - shadcn/ui 组件库
+  - radix-ui 组件库
 - **状态管理**:
   - React Context (轻量级状态)
   - Zustand (复杂状态)
@@ -39,7 +39,7 @@ qitp/
 ├── src/
 │   ├── app/            # Next.js 13+ App Router
 │   ├── components/     # 组件目录
-│   │   ├── ui/        # shadcn/ui 基础组件
+│   │   ├── ui/        # radix-ui 基础组件
 │   │   └── common/    # 通用业务组件
 │   ├── lib/           # 工具函数和配置
 │   ├── hooks/         # 自定义 Hooks
