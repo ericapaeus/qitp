@@ -17,6 +17,14 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 // 菜单配置
 const menuItems = [
@@ -117,110 +125,149 @@ export default function Sidebar({ isCollapsed, onCollapse }: SidebarProps) {
   const hasActiveChild = (items?: { href: string }[]) =>
     items?.some((item) => pathname === item.href)
 
+  // 渲染菜单项
+  const renderMenuItem = (item: typeof menuItems[0]) => {
+    const active = isActive(item.href) || hasActiveChild(item.items)
+    const Icon = item.icon
+
+    const menuButton = (
+      <Button
+        variant={active ? "secondary" : "ghost"}
+        className={cn(
+          "w-full justify-start",
+          "px-3 py-2",
+          active && "bg-primary/10 hover:bg-primary/15 dark:bg-primary/20 dark:hover:bg-primary/25",
+          "transition-all duration-200 ease-in-out",
+          "group",
+          "text-left"
+        )}
+        onClick={() => item.items && toggleMenu(item.href)}
+      >
+        <Icon className={cn(
+          "h-4 w-4 shrink-0",
+          active
+            ? "text-primary"
+            : "text-muted-foreground group-hover:text-foreground",
+          "transition-colors duration-200"
+        )} />
+        {!isCollapsed && (
+          <>
+            <span className={cn(
+              "ml-3 flex-1 text-sm truncate",
+              active && "font-medium text-primary",
+              !active && "group-hover:text-foreground"
+            )}>
+              {item.title}
+            </span>
+            {item.items && (
+              <ChevronRight
+                className={cn(
+                  "ml-auto h-4 w-4 shrink-0 mr-2",
+                  active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                  "transition-all duration-200",
+                  openMenus.includes(item.href) && "rotate-90"
+                )}
+              />
+            )}
+          </>
+        )}
+      </Button>
+    )
+
+    return (
+      <div key={item.href} className="relative">
+        {isCollapsed ? (
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {item.items ? menuButton : <Link href={item.href}>{menuButton}</Link>}
+              </TooltipTrigger>
+              <TooltipContent side="right" className="flex items-center font-medium">
+                {item.title}
+                {item.items && (
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                )}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          item.items ? menuButton : <Link href={item.href}>{menuButton}</Link>
+        )}
+
+        {!isCollapsed && item.items && (
+          <div
+            className={cn(
+              "overflow-hidden transition-all duration-200 ease-in-out",
+              openMenus.includes(item.href) ? "max-h-96" : "max-h-0"
+            )}
+          >
+            <div className="border-l-2 border-border ml-3 mt-1">
+              {item.items.map((subItem) => {
+                const subActive = isActive(subItem.href)
+                return (
+                  <Button
+                    key={subItem.href}
+                    variant={subActive ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start",
+                      "px-4 py-1.5",
+                      "text-sm group",
+                      subActive && "bg-primary/10 hover:bg-primary/15 dark:bg-primary/20 dark:hover:bg-primary/25",
+                      "transition-all duration-200 ease-in-out",
+                      "text-left"
+                    )}
+                    asChild
+                  >
+                    <Link href={subItem.href}>
+                      <span className={cn(
+                        "truncate",
+                        subActive && "font-medium text-primary",
+                        !subActive && "text-muted-foreground group-hover:text-foreground"
+                      )}>
+                        {subItem.title}
+                      </span>
+                    </Link>
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <aside
       className={cn(
-        'fixed top-16 left-0 h-[calc(100vh-4rem)] bg-[var(--sidebar-bg)] border-r border-[var(--sidebar-border)] transition-all duration-300 z-40',
-        isCollapsed ? 'w-[var(--sidebar-width-collapsed)]' : 'w-[var(--sidebar-width)]',
-        'shadow-[var(--shadow-md)]'
+        "fixed top-14 left-0 z-30 h-[calc(100vh-3.5rem)]",
+        "transition-all duration-300 ease-in-out",
+        isCollapsed ? "w-[var(--sidebar-width-collapsed)]" : "w-[var(--sidebar-width)]",
+        "border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+        "flex flex-col"
       )}
     >
-      <div className="h-full flex flex-col">
-        {/* 菜单列表 */}
-        <nav className="flex-1 overflow-y-auto py-6 sidebar">
-          {menuItems.map((item) => (
-            <div key={item.href}>
-              {/* 主菜单项 */}
-              {item.items ? (
-                // 有子菜单的情况
-                <div
-                  className={cn(
-                    'flex items-center h-[44px] px-6 gap-3 cursor-pointer relative text-[14px] text-[#64748B]',
-                    'transition-all duration-200',
-                    (isActive(item.href) || hasActiveChild(item.items)) && [
-                      'bg-[#F8FAFC] text-[#2D3748] font-medium',
-                      'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[#5E72E4]',
-                    ],
-                    'hover:bg-[#F1F5F9]'
-                  )}
-                  onClick={() => toggleMenu(item.href)}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {!isCollapsed && (
-                    <>
-                      <span>{item.title}</span>
-                      <ChevronRight
-                        className={cn(
-                          'ml-auto h-4 w-4 text-gray-400 transition-transform duration-200',
-                          openMenus.includes(item.href) && 'rotate-90'
-                        )}
-                      />
-                    </>
-                  )}
-                </div>
-              ) : (
-                // 没有子菜单的情况（如首页）
-                <Link
-                  href={item.href}
-                  className={cn(
-                    'flex items-center h-[44px] px-6 gap-3 relative text-[14px] text-[#64748B]',
-                    'transition-all duration-200',
-                    isActive(item.href) && [
-                      'bg-[#F8FAFC] text-[#2D3748] font-medium',
-                      'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[#5E72E4]',
-                    ],
-                    'hover:bg-[#F1F5F9]'
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {!isCollapsed && (
-                    <span>{item.title}</span>
-                  )}
-                </Link>
-              )}
-
-              {/* 子菜单项 */}
-              {!isCollapsed &&
-                item.items &&
-                openMenus.includes(item.href) && (
-                  <div className="overflow-hidden transition-[height] duration-300">
-                    {item.items.map((subItem) => (
-                      <Link
-                        key={subItem.href}
-                        href={subItem.href}
-                        className={cn(
-                          'flex items-center h-[40px] pl-[44px] pr-6 text-[13px] text-[#64748B] opacity-90',
-                          'transition-all duration-200',
-                          isActive(subItem.href) && [
-                            'bg-[#F8FAFC] text-[#2D3748] font-medium',
-                          ],
-                          'hover:bg-[#F1F5F9]'
-                        )}
-                      >
-                        {subItem.title}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-            </div>
-          ))}
-        </nav>
-
-        {/* 折叠按钮 */}
-        <div className="p-4 border-t border-[var(--sidebar-border)]">
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={() => onCollapse(!isCollapsed)}
-            className="w-full h-10 bg-white hover:bg-[#F1F5F9] transition-all duration-200"
-          >
-            {isCollapsed ? (
-              <ChevronRight className="h-5 w-5 text-[#64748B]" />
-            ) : (
-              <ChevronLeft className="h-5 w-5 text-[#64748B]" />
-            )}
-          </Button>
+      <ScrollArea className="flex-1">
+        <div className="space-y-1 p-2">
+          {menuItems.map(renderMenuItem)}
         </div>
+      </ScrollArea>
+      <div className="h-14 border-t flex items-center justify-center bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-9 w-9",
+            "transition-transform duration-200 hover:bg-primary/10",
+            isCollapsed && "rotate-180"
+          )}
+          onClick={() => onCollapse(!isCollapsed)}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="sr-only">
+            {isCollapsed ? "展开侧边栏" : "收起侧边栏"}
+          </span>
+        </Button>
       </div>
     </aside>
   )

@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Home } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 // 从 Sidebar 导入菜单配置
 const menuItems = [
@@ -114,27 +115,34 @@ export default function Breadcrumb() {
   const breadcrumbs = generateBreadcrumbs()
 
   return (
-    <nav className="h-14 px-6 flex items-center bg-white border-b border-[var(--sidebar-border)]">
-      <Link 
-        href="/" 
-        className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+    <nav className="h-14 px-6 flex items-center border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8"
+        asChild
       >
-        首页
-      </Link>
+        <Link href="/">
+          <Home className="h-4 w-4" />
+          <span className="sr-only">首页</span>
+        </Link>
+      </Button>
       {breadcrumbs.map((item, index) => (
         <div key={item.href} className="flex items-center">
-          <ChevronRight className="mx-2 h-4 w-4 text-gray-400" />
-          <Link
-            href={item.href}
+          <ChevronRight className="mx-2 h-4 w-4 text-muted-foreground" />
+          <Button
+            variant="ghost"
+            size="sm"
             className={cn(
-              'text-sm transition-colors',
-              pathname === item.href
-                ? 'text-gray-900 font-medium'
-                : 'text-gray-500 hover:text-gray-900'
+              'h-8',
+              pathname === item.href && 'font-medium'
             )}
+            asChild
           >
-            {item.title}
-          </Link>
+            <Link href={item.href}>
+              {item.title}
+            </Link>
+          </Button>
         </div>
       ))}
     </nav>

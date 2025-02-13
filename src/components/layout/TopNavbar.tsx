@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Search, Bell, User } from 'lucide-react'
+import { Bell, Search, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { cn } from '@/lib/utils'
 
 // 从 Sidebar 导入菜单配置
 const menuItems = [
@@ -86,30 +86,27 @@ export default function TopNavbar() {
   const [searchQuery, setSearchQuery] = useState('')
 
   return (
-    <header
-      className="fixed top-0 left-0 right-0 h-16 bg-white z-50"
-      style={{ boxShadow: 'var(--shadow-md)' }}
-    >
-      <div className="h-full px-6 flex items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 max-w-screen-2xl items-center">
         {/* 左侧系统名称 */}
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-lg font-semibold text-gray-900">
-            检疫隔离试种信息管理系统
+        <div className="mr-4 hidden md:flex">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
+            <span className="font-bold">检疫隔离试种信息管理系统</span>
           </Link>
         </div>
 
         {/* 右侧工具栏 */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           {/* 搜索框 */}
-          <div className="hidden md:flex items-center">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="text"
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
                 placeholder="搜索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-64 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-8 md:w-[300px] lg:w-[400px]"
               />
             </div>
           </div>
@@ -117,7 +114,7 @@ export default function TopNavbar() {
           {/* 通知按钮 */}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive" />
           </Button>
 
           {/* 用户菜单 */}
@@ -130,10 +127,14 @@ export default function TopNavbar() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>我的账号</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>个人信息</DropdownMenuItem>
-              <DropdownMenuItem>系统设置</DropdownMenuItem>
+              <DropdownMenuItem>
+                个人信息
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                系统设置
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem className="text-destructive">
                 退出登录
               </DropdownMenuItem>
             </DropdownMenuContent>
