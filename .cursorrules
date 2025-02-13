@@ -15,7 +15,7 @@
 - 功能需求分析与拆解
 
 3. UI/UX 设计师
-- shadcn/ui 组件库专家
+- radix-ui 组件库专家
 - 界面交互设计
 - 视觉体验优化
 
@@ -58,7 +58,8 @@
 - TypeScript 5+
 - React 18+
 - Tailwind CSS
-- shadcn/ui
+- radix-ui
+- playwright
 
 ### 状态管理
 - React Context (轻量级状态)
@@ -99,7 +100,7 @@
 
 - 优先使用 Tailwind CSS
 - 复杂样式使用 CSS Modules
-- 遵循 shadcn/ui 设计系统
+- 遵循 radix-ui 设计系统
 
 ### 代码质量
 
@@ -116,7 +117,7 @@ qitp/
 ├── src/
 │ ├── app/ # Next.js 13+ App Router
 │ ├── components/ # 组件目录
-│ │ ├── ui/ # shadcn/ui 基础组件
+│ │ ├── ui/ # radix-ui 基础组件
 │ │ └── common/ # 通用业务组件
 │ ├── lib/ # 工具函数和配置
 │ ├── hooks/ # 自定义 Hooks

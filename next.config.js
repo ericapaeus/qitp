@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const config: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   // 使用 SWC 编译器
@@ -9,4 +8,4 @@ const config: NextConfig = {
   },
 };
 
-export default config;
+module.exports = nextConfig; 
