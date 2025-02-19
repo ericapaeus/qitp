@@ -16,7 +16,6 @@
 - [检疫机构管理](./business/quarantine.md)
 - [隔离试种管理](./business/isolation.md)
 - [实验室检验管理](./business/laboratory.md)
-- [表单管理](./business/forms.md)
 
 ### 3. 数据分析模块
 - [数据统计分析](./analysis/statistics.md)
@@ -28,7 +27,6 @@
    - 用户认证与权限管理
    - 基础数据管理
    - 隔离试种管理
-   - 表单管理
 
 2. 第二阶段（业务功能）
    - 引种企业管理
