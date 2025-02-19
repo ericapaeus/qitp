@@ -92,7 +92,6 @@
 
 ### Mock 数据规范
 
-- 使用 MSW (Mock Service Worker)
 - Mock 数据集中管理在 `src/mocks`
 - 接口响应符合真实场景
 
@@ -125,7 +124,7 @@ qitp/
 │ ├── styles/ # 全局样式
 │ └── mocks/ # Mock 数据
 │   ├── data/ # Mock 数据文件
-│   └── handlers/ # MSW 请求处理器
+│   └── handlers/ # 请求处理器
 └── public/ # 静态资源
 
 ## 响应指南

@@ -58,7 +58,7 @@ src/
   │       ├── laboratory/      # 实验室相关 API
   │       ├── quarantine-organizations/ # 检疫机构相关 API
   │       └── enterprises/     # 企业相关 API
-  └── mocks/                   # MSW 模拟数据
+  └── mocks/                   # 模拟数据
       ├── data/               # 模拟数据定义和存储
       └── handlers/          # API 请求处理器
 2. 存在的问题

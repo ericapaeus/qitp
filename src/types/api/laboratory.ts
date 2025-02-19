@@ -92,4 +92,28 @@ export interface GenerateReportResponse {
   date: string          // 日期
   fileName: string       // 报告文件名
   url: string           // 报告下载链接
+}
+
+import { APIResponse, PaginationQuery, SortQuery, TimeRangeQuery } from './index'
+
+export interface LaboratoryTask {
+  id: string
+  type: 'DETECTION' | 'ANALYSIS' | 'RESEARCH'
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED'
+  priority: 'LOW' | 'MEDIUM' | 'HIGH'
+  assignee: {
+    id: string
+    name: string
+  }
+  subject: {
+    type: string
+    name: string
+    quantity: number
+    unit: string
+  }
+  progress: number
+  startDate?: string
+  endDate?: string
+  createdAt: string
+  updatedAt: string
 } 

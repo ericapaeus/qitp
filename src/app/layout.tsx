@@ -6,26 +6,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/toaster';
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import MainLayout from '@/components/layout/MainLayout'
-import { useEffect } from 'react';
 
 const inter = Inter({ subsets: ["latin"] });
-
 const queryClient = new QueryClient()
-
-function MSWComponent() {
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      const initMocks = async () => {
-        const { worker } = await import('@/mocks/browser')
-        await worker.start({
-          onUnhandledRequest: 'bypass'
-        })
-      }
-      initMocks()
-    }
-  }, [])
-  return null
-}
 
 export default function RootLayout({
   children,
@@ -41,7 +24,6 @@ export default function RootLayout({
           </NotificationProvider>
           <Toaster />
         </QueryClientProvider>
-        <MSWComponent />
       </body>
     </html>
   );

@@ -5,12 +5,12 @@ export * from './isolation'
 export * from './laboratory'
 export * from './reports'
 
-import { db } from '../db'
+import { database } from '../db'
+import type { Enterprise, ImportApplication, ImportRecord } from '@/types/api/enterprises'
 
 // 创建初始企业数据
-const enterprises = [
+const enterprises: Omit<Enterprise, 'id'>[] = [
   {
-    id: '1',
     code: 'E000001',
     name: '示例企业一',
     contact: {
@@ -18,13 +18,12 @@ const enterprises = [
       person: '张三',
       phone: '13800138001',
     },
-    status: 'ACTIVE',
+    status: 'ACTIVE' as const,
     syncTime: '2024-03-20T08:00:00Z',
     createdAt: '2024-03-20T08:00:00Z',
     updatedAt: '2024-03-20T08:00:00Z',
   },
   {
-    id: '2',
     code: 'E000002',
     name: '示例企业二',
     contact: {
@@ -32,13 +31,12 @@ const enterprises = [
       person: '李四',
       phone: '13800138002',
     },
-    status: 'ACTIVE',
+    status: 'ACTIVE' as const,
     syncTime: '2024-03-20T08:00:00Z',
     createdAt: '2024-03-20T08:00:00Z',
     updatedAt: '2024-03-20T08:00:00Z',
   },
   {
-    id: '3',
     code: 'E000003',
     name: '示例企业三',
     contact: {
@@ -46,17 +44,16 @@ const enterprises = [
       person: '王五',
       phone: '13800138003',
     },
-    status: 'SUSPENDED',
+    status: 'SUSPENDED' as const,
     syncTime: '2024-03-20T08:00:00Z',
     createdAt: '2024-03-20T08:00:00Z',
     updatedAt: '2024-03-20T08:00:00Z',
   },
 ]
 
-// 创建初始引种记录数据
-const importRecords = [
+// 创建初始引种申请数据
+const importRecords: Omit<ImportRecord, 'id'>[] = [
   {
-    id: '1',
     enterpriseId: '1',
     approvalNo: 'IM202403001',
     quarantineCertNo: 'QC202403001',
@@ -79,12 +76,11 @@ const importRecords = [
       startDate: '',
       endDate: '',
     },
-    status: 'PENDING',
+    status: 'IMPORTING' as const,
     createdAt: '2024-03-20T08:00:00Z',
     updatedAt: '2024-03-20T08:00:00Z',
   },
   {
-    id: '2',
     enterpriseId: '2',
     approvalNo: 'IM202403002',
     quarantineCertNo: '',
@@ -107,7 +103,7 @@ const importRecords = [
       startDate: '',
       endDate: '',
     },
-    status: 'PENDING',
+    status: 'ISOLATING' as const,
     createdAt: '2024-03-20T08:00:00Z',
     updatedAt: '2024-03-20T08:00:00Z',
   },
@@ -116,22 +112,20 @@ const importRecords = [
 // 初始化数据
 export function initializeData() {
   // 添加企业数据
-  enterprises.forEach((enterprise) => {
-    const existingEnterprise = db.enterprise.findFirst({
-      where: { id: { equals: enterprise.id } },
-    })
+  enterprises.forEach((enterprise, index) => {
+    const id = String(index + 1)
+    const existingEnterprise = database.findFirst<Enterprise>('enterprise', { id })
     if (!existingEnterprise) {
-      db.enterprise.create(enterprise)
+      database.create<Enterprise>('enterprise', enterprise)
     }
   })
 
   // 添加引种记录数据
-  importRecords.forEach((record) => {
-    const existingRecord = db.importApplication.findFirst({
-      where: { id: { equals: record.id } },
-    })
+  importRecords.forEach((record, index) => {
+    const id = String(index + 1)
+    const existingRecord = database.findFirst<ImportRecord>('importRecord', { id })
     if (!existingRecord) {
-      db.importApplication.create(record)
+      database.create<ImportRecord>('importRecord', record)
     }
   })
 }

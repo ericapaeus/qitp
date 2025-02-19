@@ -1,171 +1,235 @@
-import { rest } from 'msw'
-import { quarantineSites, quarantineSamples } from '../data/quarantine'
+import { NextRequest } from 'next/server'
+import { database, paginate, sort, filter } from '../db'
+import { parseQuery, parseBody, createResponse } from '../interceptor'
+import type { ApiResponse, PaginationParams, DateRangeParams, SortOrder } from '../types'
+import type { QuarantineTask, QuarantineSite, QuarantineSample } from '@/types/api/quarantine'
 
 export const quarantineHandlers = [
-  // 获取检疫场所列表
-  rest.get('/api/quarantine/sites', (req, res, ctx) => {
-    const type = req.url.searchParams.get('type')
-    const status = req.url.searchParams.get('status')
-    
-    let result = [...quarantineSites]
-    
-    if (type && type !== 'all') {
-      result = result.filter(s => s.type === type)
+  {
+    method: 'GET',
+    path: '/quarantine/sites',
+    async handler(request: NextRequest) {
+      const { type, status } = parseQuery(request)
+      
+      let result = database.findMany<QuarantineSite>('quarantineSite')
+      
+      if (type && type !== 'all') {
+        result = result.filter((s: QuarantineSite) => s.type === type)
+      }
+      
+      if (status && status !== 'all') {
+        result = result.filter((s: QuarantineSite) => s.status === status)
+      }
+      
+      return createResponse(result)
     }
-    
-    if (status && status !== 'all') {
-      result = result.filter(s => s.status === status)
-    }
-    
-    return res(ctx.json(result))
-  }),
+  },
 
-  // 获取单个检疫场所
-  rest.get('/api/quarantine/sites/:id', (req, res, ctx) => {
-    const { id } = req.params
-    const site = quarantineSites.find(s => s.id === id)
-    
-    if (!site) {
-      return res(ctx.status(404))
+  {
+    method: 'GET',
+    path: '/quarantine/sites/:id',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const site = database.findFirst<QuarantineSite>('quarantineSite', {
+        id: params.id
+      })
+      
+      if (!site) {
+        return createResponse(null, 404)
+      }
+      
+      return createResponse(site)
     }
-    
-    return res(ctx.json(site))
-  }),
+  },
 
-  // 创建检疫场所
-  rest.post('/api/quarantine/sites', async (req, res, ctx) => {
-    const body = await req.json()
-    const site = {
-      id: Date.now().toString(),
-      ...body,
-      status: 'ACTIVE',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+  {
+    method: 'POST',
+    path: '/quarantine/sites',
+    async handler(request: NextRequest) {
+      const body = await parseBody<Omit<QuarantineSite, 'id' | 'createdAt' | 'updatedAt'>>(request)
+      const now = new Date().toISOString()
+      
+      const site = database.create<QuarantineSite>('quarantineSite', {
+        ...body,
+        status: 'ACTIVE',
+        createdAt: now,
+        updatedAt: now
+      })
+      
+      return createResponse(site)
     }
-    
-    quarantineSites.push(site)
-    return res(ctx.json(site))
-  }),
+  },
 
-  // 更新检疫场所
-  rest.put('/api/quarantine/sites/:id', async (req, res, ctx) => {
-    const { id } = req.params
-    const body = await req.json()
-    const index = quarantineSites.findIndex(s => s.id === id)
-    
-    if (index === -1) {
-      return res(ctx.status(404))
+  {
+    method: 'PUT',
+    path: '/quarantine/sites/:id',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const body = await parseBody<Partial<Omit<QuarantineSite, 'id' | 'createdAt' | 'updatedAt'>>>(request)
+      
+      const site = database.findFirst<QuarantineSite>('quarantineSite', {
+        id: params.id
+      })
+      
+      if (!site) {
+        return createResponse(null, 404)
+      }
+      
+      const updated = database.update<QuarantineSite>('quarantineSite', 
+        { id: params.id },
+        {
+          ...site,
+          ...body,
+          updatedAt: new Date().toISOString()
+        }
+      )
+      
+      return createResponse(updated)
     }
-    
-    quarantineSites[index] = {
-      ...quarantineSites[index],
-      ...body,
-      updatedAt: new Date().toISOString()
-    }
-    
-    return res(ctx.json(quarantineSites[index]))
-  }),
+  },
 
-  // 获取检疫样品列表
-  rest.get('/api/quarantine/samples', (req, res, ctx) => {
-    const siteId = req.url.searchParams.get('siteId')
-    const status = req.url.searchParams.get('status')
-    
-    let result = [...quarantineSamples]
-    
-    if (siteId) {
-      result = result.filter(s => s.siteId === siteId)
+  {
+    method: 'GET',
+    path: '/quarantine/samples',
+    async handler(request: NextRequest) {
+      const { siteId, status } = parseQuery(request)
+      
+      let result = database.findMany<QuarantineSample>('quarantineSample')
+      
+      if (siteId) {
+        result = result.filter((s: QuarantineSample) => s.siteId === siteId)
+      }
+      
+      if (status && status !== 'all') {
+        result = result.filter((s: QuarantineSample) => s.status === status)
+      }
+      
+      return createResponse(result)
     }
-    
-    if (status && status !== 'all') {
-      result = result.filter(s => s.status === status)
-    }
-    
-    return res(ctx.json(result))
-  }),
+  },
 
-  // 获取单个检疫样品
-  rest.get('/api/quarantine/samples/:id', (req, res, ctx) => {
-    const { id } = req.params
-    const sample = quarantineSamples.find(s => s.id === id)
-    
-    if (!sample) {
-      return res(ctx.status(404))
+  {
+    method: 'GET',
+    path: '/quarantine/samples/:id',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const sample = database.findFirst<QuarantineSample>('quarantineSample', {
+        id: params.id
+      })
+      
+      if (!sample) {
+        return createResponse(null, 404)
+      }
+      
+      return createResponse(sample)
     }
-    
-    return res(ctx.json(sample))
-  }),
+  },
 
-  // 创建检疫样品
-  rest.post('/api/quarantine/samples', async (req, res, ctx) => {
-    const body = await req.json()
-    const sample = {
-      id: Date.now().toString(),
-      registrationNo: `${body.siteId.substring(0, 2)}${new Date().getFullYear()}${String(quarantineSamples.length + 1).padStart(3, '0')}`,
-      ...body,
-      status: 'REGISTERED',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+  {
+    method: 'POST',
+    path: '/quarantine/samples',
+    async handler(request: NextRequest) {
+      const body = await parseBody<Omit<QuarantineSample, 'id' | 'attachments' | 'createdAt' | 'updatedAt'>>(request)
+      const now = new Date().toISOString()
+      
+      const sample = database.create<QuarantineSample>('quarantineSample', {
+        ...body,
+        attachments: [],
+        status: 'REGISTERED',
+        createdAt: now,
+        updatedAt: now
+      })
+      
+      return createResponse(sample)
     }
-    
-    quarantineSamples.push(sample)
-    return res(ctx.json(sample))
-  }),
+  },
 
-  // 更新检疫样品
-  rest.put('/api/quarantine/samples/:id', async (req, res, ctx) => {
-    const { id } = req.params
-    const body = await req.json()
-    const index = quarantineSamples.findIndex(s => s.id === id)
-    
-    if (index === -1) {
-      return res(ctx.status(404))
+  {
+    method: 'PUT',
+    path: '/quarantine/samples/:id',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const body = await parseBody<Partial<Omit<QuarantineSample, 'id' | 'attachments' | 'createdAt' | 'updatedAt'>>>(request)
+      
+      const sample = database.findFirst<QuarantineSample>('quarantineSample', {
+        id: params.id
+      })
+      
+      if (!sample) {
+        return createResponse(null, 404)
+      }
+      
+      const updated = database.update<QuarantineSample>('quarantineSample',
+        { id: params.id },
+        {
+          ...sample,
+          ...body,
+          updatedAt: new Date().toISOString()
+        }
+      )
+      
+      return createResponse(updated)
     }
-    
-    quarantineSamples[index] = {
-      ...quarantineSamples[index],
-      ...body,
-      updatedAt: new Date().toISOString()
-    }
-    
-    return res(ctx.json(quarantineSamples[index]))
-  }),
+  },
 
-  // 更新检疫样品状态
-  rest.patch('/api/quarantine/samples/:id/status', async (req, res, ctx) => {
-    const { id } = req.params
-    const body = await req.json()
-    const sample = quarantineSamples.find(s => s.id === id)
-    
-    if (!sample) {
-      return res(ctx.status(404))
+  {
+    method: 'PATCH',
+    path: '/quarantine/samples/:id/status',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const body = await parseBody<{ status: QuarantineSample['status'] }>(request)
+      
+      const sample = database.findFirst<QuarantineSample>('quarantineSample', {
+        id: params.id
+      })
+      
+      if (!sample) {
+        return createResponse(null, 404)
+      }
+      
+      const updated = database.update<QuarantineSample>('quarantineSample',
+        { id: params.id },
+        {
+          ...sample,
+          status: body.status,
+          updatedAt: new Date().toISOString()
+        }
+      )
+      
+      return createResponse(updated)
     }
-    
-    sample.status = body.status
-    sample.updatedAt = new Date().toISOString()
-    
-    return res(ctx.json(sample))
-  }),
+  },
 
-  // 上传检疫样品附件
-  rest.post('/api/quarantine/samples/:id/attachments', async (req, res, ctx) => {
-    const { id } = req.params
-    const body = await req.json()
-    const sample = quarantineSamples.find(s => s.id === id)
-    
-    if (!sample) {
-      return res(ctx.status(404))
+  {
+    method: 'POST',
+    path: '/quarantine/samples/:id/attachments',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const body = await parseBody<{
+        name: string
+        url: string
+        type: string
+        size: number
+      }>(request)
+      
+      const sample = database.findFirst<QuarantineSample>('quarantineSample', {
+        id: params.id
+      })
+      
+      if (!sample) {
+        return createResponse(null, 404)
+      }
+      
+      const attachment = {
+        id: Date.now().toString(),
+        ...body,
+        uploadedAt: new Date().toISOString()
+      }
+      
+      const updated = database.update<QuarantineSample>('quarantineSample',
+        { id: params.id },
+        {
+          ...sample,
+          attachments: [...(sample.attachments || []), attachment],
+          updatedAt: new Date().toISOString()
+        }
+      )
+      
+      return createResponse(attachment)
     }
-    
-    const attachment = {
-      id: Date.now().toString(),
-      ...body,
-      uploadedAt: new Date().toISOString()
-    }
-    
-    sample.attachments.push(attachment)
-    sample.updatedAt = new Date().toISOString()
-    
-    return res(ctx.json(attachment))
-  })
+  }
 ] 

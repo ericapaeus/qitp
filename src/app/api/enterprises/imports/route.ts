@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/mocks/db'
+import { database } from '@/mocks/db'
 import { APIResponse } from '@/types/api'
+import type { ImportApplication } from '@/types/api/enterprises'
 
 // GET /api/enterprises/imports
 export async function GET(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status')
 
     // 获取所有导入记录
-    let applications = db.importApplication.getAll()
+    let applications = database.findMany<ImportApplication>('importApplication')
 
     // 应用过滤
     if (enterpriseId || startTime || endTime || status) {
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const now = new Date().toISOString()
 
-    const application = db.importApplication.create({
+    const application = database.create<ImportApplication>('importApplication', {
       ...body,
       id: String(Date.now()),
       status: 'PENDING',
@@ -103,13 +104,14 @@ export async function PATCH(
     const body = await req.json()
     const now = new Date().toISOString()
 
-    const application = db.importApplication.update({
-      where: { id: { equals: String(params.id) } },
-      data: {
+    const application = database.update<ImportApplication>(
+      'importApplication',
+      { id: String(params.id) },
+      {
         ...body,
         updatedAt: now
       }
-    })
+    )
 
     const response: APIResponse<typeof application> = {
       code: 200,

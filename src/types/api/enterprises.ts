@@ -1,5 +1,55 @@
 import { APIResponse, PaginationQuery, SortQuery, TimeRangeQuery } from './index'
-import { Enterprise as EnterpriseData, ImportApplication } from '@/mocks/data/enterprises'
+
+/**
+ * 企业基本信息
+ */
+export interface Enterprise {
+  id: string
+  code: string
+  name: string
+  contact: {
+    address: string
+    person: string
+    phone: string
+  }
+  status: 'ACTIVE' | 'SUSPENDED'
+  syncTime: string
+  createdAt: string
+  updatedAt: string
+}
+
+/**
+ * 引种申请
+ */
+export interface ImportApplication {
+  id: string
+  enterpriseId: string
+  enterpriseName: string
+  approvalNo: string
+  quarantineCertNo?: string
+  plant: {
+    name: string
+    scientificName: string
+    variety: string
+    sourceCountry: string
+    quantity: number
+    unit: string
+    purpose: string
+  }
+  importInfo: {
+    entryPort: string
+    plannedDate: string
+    actualDate?: string
+  }
+  isolationInfo?: {
+    facilityId: string
+    startDate?: string
+    endDate?: string
+  }
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  createdAt: string
+  updatedAt: string
+}
 
 // 企业查询参数
 export interface EnterpriseQuery extends PaginationQuery, SortQuery {
@@ -14,26 +64,26 @@ export interface EnterpriseAPI {
   // 企业列表
   'GET /api/enterprises': {
     query: EnterpriseQuery
-    response: APIResponse<EnterpriseData[]>
+    response: APIResponse<Enterprise[]>
   }
   
   // 创建企业
   'POST /api/enterprises': {
-    body: Omit<EnterpriseData, 'id' | 'createdAt' | 'updatedAt'>
-    response: APIResponse<EnterpriseData>
+    body: Omit<Enterprise, 'id' | 'createdAt' | 'updatedAt'>
+    response: APIResponse<Enterprise>
   }
   
   // 获取企业详情
   'GET /api/enterprises/:id': {
     params: { id: string }
-    response: APIResponse<EnterpriseData>
+    response: APIResponse<Enterprise>
   }
   
   // 更新企业
   'PUT /api/enterprises/:id': {
     params: { id: string }
-    body: Partial<Omit<EnterpriseData, 'id' | 'createdAt' | 'updatedAt'>>
-    response: APIResponse<EnterpriseData>
+    body: Partial<Omit<Enterprise, 'id' | 'createdAt' | 'updatedAt'>>
+    response: APIResponse<Enterprise>
   }
 }
 
@@ -81,22 +131,28 @@ export interface ImportApplicationAPI {
   }
 }
 
-/**
- * 企业基本信息
- */
-export interface Enterprise {
-  id: string
+export interface EnterpriseCreateInput {
   code: string
   name: string
-  contact: {
-    address: string
-    person: string
-    phone: string
-  }
-  status: 'ACTIVE' | 'SUSPENDED'
-  syncTime: string
-  createdAt: string
-  updatedAt: string
+  contact: Enterprise['contact']
+  status: Enterprise['status']
+}
+
+export interface EnterpriseUpdateInput extends Partial<EnterpriseCreateInput> {
+  syncTime?: string
+}
+
+export interface ImportApplicationCreateInput {
+  enterpriseId: string
+  approvalNo: string
+  plant: ImportApplication['plant']
+  importInfo: Omit<ImportApplication['importInfo'], 'actualDate'>
+}
+
+export interface ImportApplicationReviewInput {
+  status: 'APPROVED' | 'REJECTED'
+  quarantineCertNo?: string
+  remarks?: string
 }
 
 /**
@@ -114,7 +170,7 @@ export interface SyncResult {
  */
 export interface EnterprisesResponse {
   total: number
-  items: EnterpriseData[]
+  items: Enterprise[]
   pagination: {
     current: number
     pageSize: number

@@ -1,12 +1,15 @@
-import { rest } from 'msw'
-import { db, paginate, sort, filter } from '../db'
-import type { EnterpriseAPI, ImportApplicationAPI } from '@/types/api/enterprises'
-import type { ImportApplication } from '../data/enterprises'
+import type { Enterprise, ImportApplication, ImportApplicationCreateInput } from '@/types/api/enterprises'
+import { NextRequest } from 'next/server'
+import { database, paginate, sort, filter } from '../db'
+import type { ApiResponse, PaginationParams, DateRangeParams, SortOrder } from '../types'
+import { parseQuery, parseBody, createResponse } from '../interceptor'
 
 export const enterpriseHandlers = [
-  // 获取企业列表
-  rest.get('/api/enterprises', (req, res, ctx) => {
-    try {
+  {
+    method: 'GET',
+    path: '/enterprises',
+    async handler(request: NextRequest) {
+      const params = parseQuery(request)
       const { 
         keyword,
         province,
@@ -15,169 +18,87 @@ export const enterpriseHandlers = [
         pageSize = 10,
         sortField,
         sortOrder
-      } = Object.fromEntries(req.url.searchParams)
+      } = params
 
-      // 获取所有企业
-      let enterprises = db.enterprise.getAll()
-
-      // 应用过滤
+      let enterprises = database.findMany<Enterprise>('enterprise')
       enterprises = filter(enterprises, {
         name: keyword,
         code: keyword,
         'address.province': province,
         'address.city': city
       })
-
-      // 应用排序
-      enterprises = sort(enterprises, sortField, sortOrder as 'ascend' | 'descend')
-
-      // 应用分页
+      enterprises = sort(enterprises, sortField, sortOrder as SortOrder)
       const { items, total, current } = paginate(enterprises, Number(page), Number(pageSize))
 
-      return res(
-        ctx.status(200),
-        ctx.json({
-          code: 200,
-          message: 'success',
-          data: items,
-          pagination: {
-            current,
-            pageSize: Number(pageSize),
-            total
-          }
-        })
-      )
-    } catch (error) {
-      return res(
-        ctx.status(500),
-        ctx.json({
-          code: 500,
-          message: error instanceof Error ? error.message : '未知错误'
-        })
-      )
-    }
-  }),
-
-  // 获取单个企业
-  rest.get('/api/enterprises/:id', (req, res, ctx) => {
-    try {
-      const { id } = req.params
-      const enterprise = db.enterprise.findFirst({
-        where: { id: { equals: String(id) } }
+      return createResponse({
+        items,
+        pagination: {
+          current,
+          pageSize: Number(pageSize),
+          total
+        }
       })
+    }
+  },
+
+  {
+    method: 'GET',
+    path: '/enterprises/:id',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const enterprise = database.findFirst<Enterprise>('enterprise', { id: params.id })
 
       if (!enterprise) {
-        return res(
-          ctx.status(404),
-          ctx.json({
-            code: 404,
-            message: 'Enterprise not found'
-          })
-        )
+        return createResponse(null, 404)
       }
 
-      return res(
-        ctx.status(200),
-        ctx.json({
-          code: 200,
-          message: 'success',
-          data: enterprise
-        })
-      )
-    } catch (error) {
-      return res(
-        ctx.status(500),
-        ctx.json({
-          code: 500,
-          message: error instanceof Error ? error.message : '未知错误'
-        })
-      )
+      return createResponse(enterprise)
     }
-  }),
+  },
 
-  // 创建企业
-  rest.post('/api/enterprises', async (req, res, ctx) => {
-    try {
-      const body = await req.json()
+  {
+    method: 'POST',
+    path: '/enterprises',
+    async handler(request: NextRequest) {
+      const body = await parseBody<Omit<Enterprise, 'id' | 'createdAt' | 'updatedAt'>>(request)
       const now = new Date().toISOString()
 
-      const enterprise = db.enterprise.create({
+      const enterprise = database.create<Enterprise>('enterprise', {
         ...body,
-        id: Date.now().toString(),
         createdAt: now,
         updatedAt: now
       })
 
-      return res(
-        ctx.status(200),
-        ctx.json({
-          code: 200,
-          message: 'success',
-          data: enterprise
-        })
-      )
-    } catch (error) {
-      return res(
-        ctx.status(500),
-        ctx.json({
-          code: 500,
-          message: error instanceof Error ? error.message : '未知错误'
-        })
-      )
+      return createResponse(enterprise)
     }
-  }),
+  },
 
-  // 更新企业
-  rest.put('/api/enterprises/:id', async (req, res, ctx) => {
-    try {
-      const { id } = req.params
-      const body = await req.json()
-
-      const enterprise = db.enterprise.findFirst({
-        where: { id: { equals: String(id) } }
-      })
+  {
+    method: 'PUT',
+    path: '/enterprises/:id',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const body = await parseBody<Partial<Omit<Enterprise, 'id' | 'createdAt' | 'updatedAt'>>>(request)
+      
+      const enterprise = database.findFirst<Enterprise>('enterprise', { id: params.id })
 
       if (!enterprise) {
-        return res(
-          ctx.status(404),
-          ctx.json({
-            code: 404,
-            message: 'Enterprise not found'
-          })
-        )
+        return createResponse(null, 404)
       }
 
-      const updated = db.enterprise.update({
-        where: { id: { equals: String(id) } },
-        data: {
-          ...body,
-          updatedAt: new Date().toISOString()
-        }
+      const updated = database.update<Enterprise>('enterprise', { id: params.id }, {
+        ...enterprise,
+        ...body,
+        updatedAt: new Date().toISOString()
       })
 
-      return res(
-        ctx.status(200),
-        ctx.json({
-          code: 200,
-          message: 'success',
-          data: updated
-        })
-      )
-    } catch (error) {
-      return res(
-        ctx.status(500),
-        ctx.json({
-          code: 500,
-          message: error instanceof Error ? error.message : '未知错误'
-        })
-      )
+      return createResponse(updated)
     }
-  }),
+  },
 
-  // 获取引种申请列表
-  rest.get('/api/enterprises/:enterpriseId/applications', (req, res, ctx) => {
-    try {
-      const { enterpriseId } = req.params
+  {
+    method: 'GET',
+    path: '/enterprises/:enterpriseId/applications',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const searchParams = parseQuery(request)
       const {
         status,
         plantName,
@@ -188,21 +109,18 @@ export const enterpriseHandlers = [
         pageSize = 10,
         sortField,
         sortOrder
-      } = Object.fromEntries(req.url.searchParams)
+      } = searchParams
 
-      // 获取企业的所有申请
-      let applications = db.importApplication.findMany({
-        where: { enterpriseId: { equals: String(enterpriseId) } }
+      let applications = database.findMany<ImportApplication>('importApplication', { 
+        enterpriseId: params.enterpriseId 
       })
 
-      // 应用过滤
       applications = filter(applications, {
         status,
-        plantName,
-        sourceCountry
+        'plant.name': plantName,
+        'plant.sourceCountry': sourceCountry
       })
 
-      // 时间范围过滤
       if (startTime || endTime) {
         applications = applications.filter((app) => {
           const createdAt = new Date(app.createdAt).getTime()
@@ -212,151 +130,112 @@ export const enterpriseHandlers = [
         })
       }
 
-      // 应用排序
-      applications = sort(applications, sortField, sortOrder as 'ascend' | 'descend')
-
-      // 应用分页
+      applications = sort(applications, sortField, sortOrder as SortOrder)
       const { items, total, current } = paginate(applications, Number(page), Number(pageSize))
 
-      return res(
-        ctx.status(200),
-        ctx.json({
-          code: 200,
-          message: 'success',
-          data: items,
-          pagination: {
-            current,
-            pageSize: Number(pageSize),
-            total
-          }
-        })
-      )
-    } catch (error) {
-      return res(
-        ctx.status(500),
-        ctx.json({
-          code: 500,
-          message: error instanceof Error ? error.message : '未知错误'
-        })
-      )
+      return createResponse({
+        items,
+        pagination: {
+          current,
+          pageSize: Number(pageSize),
+          total
+        }
+      })
     }
-  }),
+  },
 
-  // 获取单个引种申请
-  rest.get('/api/enterprises/applications/:id', (req, res, ctx) => {
-    const { id } = req.params
-    const application = db.importApplication.findFirst({
-      where: { id: { equals: String(id) } }
-    })
-    
-    if (!application) {
-      return res(ctx.status(404))
+  {
+    method: 'GET',
+    path: '/enterprises/applications/:id',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const application = database.findFirst<ImportApplication>('importApplication', { 
+        id: params.id 
+      })
+
+      if (!application) {
+        return createResponse(null, 404)
+      }
+
+      return createResponse(application)
     }
-    
-    return res(ctx.json(application))
-  }),
+  },
 
-  // 创建引种申请
-  rest.post('/api/enterprises/:enterpriseId/applications', async (req, res, ctx) => {
-    try {
-      const { enterpriseId } = req.params
-      const body = await req.json()
+  {
+    method: 'POST',
+    path: '/enterprises/:enterpriseId/applications',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const body = await parseBody<ImportApplicationCreateInput>(request)
       const now = new Date().toISOString()
 
-      const application = db.importApplication.create({
-        ...body,
-        id: String(Date.now()),
-        enterpriseId: String(enterpriseId),
-        applicationNo: `IA${new Date().getFullYear()}${String(db.importApplication.count() + 1).padStart(3, '0')}`,
+      const enterprise = await database.findFirst<Enterprise>('enterprise', { id: params.enterpriseId })
+      if (!enterprise) {
+        return createResponse(null, 404)
+      }
+
+      const application = database.create<ImportApplication>('importApplication', {
+        enterpriseId: params.enterpriseId,
+        enterpriseName: enterprise.name,
+        approvalNo: `IA${new Date().getFullYear()}${String(database.count('importApplication') + 1).padStart(3, '0')}`,
+        plant: body.plant,
+        importInfo: body.importInfo,
         status: 'PENDING',
         createdAt: now,
         updatedAt: now
       })
 
-      return res(
-        ctx.status(200),
-        ctx.json({
-          code: 200,
-          message: 'success',
-          data: application
-        })
-      )
-    } catch (error) {
-      return res(
-        ctx.status(500),
-        ctx.json({
-          code: 500,
-          message: error instanceof Error ? error.message : '未知错误'
-        })
-      )
+      return createResponse(application)
     }
-  }),
+  },
 
-  // 审核引种申请
-  rest.patch('/api/enterprises/applications/:id/review', async (req, res, ctx) => {
-    try {
-      const { id } = req.params
-      const body = await req.json()
+  {
+    method: 'PATCH',
+    path: '/enterprises/applications/:id/review',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const body = await parseBody<{
+        approved: boolean
+        comments: string
+        quarantineRequired?: boolean
+        quarantineSite?: string
+        quarantinePeriod?: number
+      }>(request)
 
-      const application = db.importApplication.findFirst({
-        where: { id: { equals: String(id) } }
+      const application = database.findFirst<ImportApplication>('importApplication', { 
+        id: params.id 
       })
 
       if (!application) {
-        return res(
-          ctx.status(404),
-          ctx.json({
-            code: 404,
-            message: 'Application not found'
-          })
-        )
+        return createResponse(null, 404)
       }
 
-      const updated = db.importApplication.update({
-        where: { id: { equals: String(id) } },
-        data: {
+      const updated = database.update<ImportApplication>(
+        'importApplication', 
+        { id: params.id },
+        {
+          ...application,
           status: body.approved ? 'APPROVED' : 'REJECTED',
-          reviewedAt: new Date().toISOString(),
-          reviewer: body.reviewer,
-          reviewComments: body.comments,
-          reviewResult: body.approved ? 'APPROVED' : 'REJECTED',
-          quarantineRequired: body.quarantineRequired,
-          quarantineSite: body.quarantineSite,
-          quarantinePeriod: body.quarantinePeriod,
+          isolationInfo: body.quarantineRequired && body.quarantineSite ? {
+            facilityId: body.quarantineSite,
+            startDate: undefined,
+            endDate: undefined
+          } : undefined,
           updatedAt: new Date().toISOString()
         }
-      })
+      )
 
-      return res(
-        ctx.status(200),
-        ctx.json({
-          code: 200,
-          message: 'success',
-          data: updated
-        })
-      )
-    } catch (error) {
-      return res(
-        ctx.status(500),
-        ctx.json({
-          code: 500,
-          message: error instanceof Error ? error.message : '未知错误'
-        })
-      )
+      return createResponse(updated)
     }
-  }),
+  },
 
-  // 同步企业数据
-  rest.post('/api/enterprises/sync', async (req, res, ctx) => {
-    try {
+  {
+    method: 'POST',
+    path: '/enterprises/sync',
+    async handler(request: NextRequest) {
       const now = new Date().toISOString()
-      const syncCount = Math.floor(Math.random() * 5) + 1 // 模拟同步 1-5 条数据
+      const syncCount = Math.floor(Math.random() * 5) + 1
 
-      // 模拟同步新数据
       for (let i = 0; i < syncCount; i++) {
         const enterpriseId = Date.now().toString() + i
-        db.enterprise.create({
-          id: enterpriseId,
+        database.create<Enterprise>('enterprise', {
           code: `E${enterpriseId.slice(-6)}`,
           name: `测试企业 ${enterpriseId.slice(-4)}`,
           contact: {
@@ -371,79 +250,38 @@ export const enterpriseHandlers = [
         })
       }
 
-      return res(
-        ctx.status(200),
-        ctx.json({
-          code: 200,
-          message: 'success',
-          data: {
-            success: true,
-            syncCount,
-            syncTime: now,
-          },
-        })
-      )
-    } catch (error) {
-      return res(
-        ctx.status(500),
-        ctx.json({
-          code: 500,
-          message: error instanceof Error ? error.message : '同步失败',
-          data: {
-            success: false,
-            syncCount: 0,
-            syncTime: new Date().toISOString(),
-            errorMessage: error instanceof Error ? error.message : '未知错误',
-          },
-        })
-      )
+      return createResponse({
+        success: true,
+        syncCount,
+        syncTime: now,
+      })
     }
-  }),
+  },
 
-  // 更新企业状态
-  rest.patch('/api/enterprises/:id/status', async (req, res, ctx) => {
-    try {
-      const { id } = req.params
-      const { status } = await req.json()
-
-      const enterprise = db.enterprise.findFirst({
-        where: { id: { equals: String(id) } },
+  {
+    method: 'PATCH',
+    path: '/enterprises/:id/status',
+    async handler(request: NextRequest, params: Record<string, string>) {
+      const body = await parseBody<{ status: 'ACTIVE' | 'SUSPENDED' }>(request)
+      
+      const enterprise = database.findFirst<Enterprise>('enterprise', { 
+        id: params.id 
       })
 
       if (!enterprise) {
-        return res(
-          ctx.status(404),
-          ctx.json({
-            code: 404,
-            message: '企业不存在',
-          })
-        )
+        return createResponse(null, 404)
       }
 
-      const updated = db.enterprise.update({
-        where: { id: { equals: String(id) } },
-        data: {
-          status,
-          updatedAt: new Date().toISOString(),
-        },
-      })
+      const updated = database.update<Enterprise>(
+        'enterprise',
+        { id: params.id },
+        {
+          status: body.status,
+          updatedAt: new Date().toISOString()
+        }
+      )
 
-      return res(
-        ctx.status(200),
-        ctx.json({
-          code: 200,
-          message: 'success',
-          data: updated,
-        })
-      )
-    } catch (error) {
-      return res(
-        ctx.status(500),
-        ctx.json({
-          code: 500,
-          message: error instanceof Error ? error.message : '更新失败',
-        })
-      )
+      return createResponse(updated)
     }
-  })
+  }
 ] 

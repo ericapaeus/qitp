@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/mocks/db'
+import { database } from '@/mocks/db'
 import { APIResponse } from '@/types/api'
+import type { Enterprise } from '@/types/api/enterprises'
 
 // GET /api/enterprises
 export async function GET(req: NextRequest) {
@@ -15,19 +16,19 @@ export async function GET(req: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') as 'ascend' | 'descend' | null
 
     // 获取所有企业
-    let enterprises = db.enterprise.findMany({})
+    let enterprises = database.findMany<Enterprise>('enterprise')
 
     // 应用过滤
     if (keyword || province || city) {
-      enterprises = enterprises.filter(enterprise => {
+      enterprises = enterprises.filter((enterprise: Enterprise) => {
         const matchKeyword = keyword 
           ? enterprise.name.includes(keyword) || enterprise.code.includes(keyword)
           : true
         const matchProvince = province
-          ? enterprise.contact?.address?.includes(province) ?? false
+          ? enterprise.contact.address.includes(province)
           : true
         const matchCity = city
-          ? enterprise.contact?.address?.includes(city) ?? false
+          ? enterprise.contact.address.includes(city)
           : true
         return matchKeyword && matchProvince && matchCity
       })
@@ -35,9 +36,9 @@ export async function GET(req: NextRequest) {
 
     // 应用排序
     if (sortField && sortOrder) {
-      enterprises.sort((a, b) => {
-        const aValue = a[sortField as keyof typeof a] ?? ''
-        const bValue = b[sortField as keyof typeof b] ?? ''
+      enterprises.sort((a: Enterprise, b: Enterprise) => {
+        const aValue = a[sortField as keyof Enterprise] ?? ''
+        const bValue = b[sortField as keyof Enterprise] ?? ''
         return sortOrder === 'ascend'
           ? String(aValue) > String(bValue) ? 1 : -1
           : String(aValue) < String(bValue) ? 1 : -1
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const now = new Date().toISOString()
 
-    const enterprise = db.enterprise.create({
+    const enterprise = database.create<Enterprise>('enterprise', {
       ...body,
       id: String(Date.now()),
       createdAt: now,
