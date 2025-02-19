@@ -1,126 +1,132 @@
-import { NextResponse } from 'next/server';
-import { formatDate } from '@/lib/utils';
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/mocks/db'
+import { APIResponse } from '@/types/api'
 
-const mockImportRecords = Array.from({ length: 50 }, (_, index) => ({
-  id: `${index + 1}`,
-  enterpriseId: `${Math.floor(Math.random() * 10) + 1}`,
-  enterpriseName: `示例企业${Math.floor(Math.random() * 10) + 1}`,
-  approvalNo: `AP${String(2024000 + index + 1)}`,
-  plant: {
-    name: ['小麦', '水稻', '玉米', '大豆'][Math.floor(Math.random() * 4)],
-    scientificName: 'Triticum aestivum',
-    variety: `品种${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`,
-    sourceCountry: ['美国', '加拿大', '澳大利亚', '法国'][Math.floor(Math.random() * 4)],
-    quantity: Math.floor(Math.random() * 1000) + 100,
-    unit: ['kg', 'g', '株'][Math.floor(Math.random() * 3)],
-    purpose: ['科研', '生产', '育种'][Math.floor(Math.random() * 3)],
-  },
-  importInfo: {
-    entryPort: ['青岛港', '天津港', '上海港', '广州港'][Math.floor(Math.random() * 4)],
-    plannedDate: formatDate(new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000)),
-    actualDate: Math.random() > 0.5
-      ? formatDate(new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000))
-      : undefined,
-  },
-  isolationInfo: Math.random() > 0.3 ? {
-    facilityId: `F${Math.floor(Math.random() * 10) + 1}`,
-    startDate: formatDate(new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)),
-    endDate: Math.random() > 0.5
-      ? formatDate(new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000))
-      : undefined,
-  } : undefined,
-  status: ['PENDING', 'IMPORTING', 'ISOLATING', 'COMPLETED'][Math.floor(Math.random() * 4)],
-  createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(),
-  updatedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-}));
+// GET /api/enterprises/imports
+export async function GET(req: NextRequest) {
+  try {
+    const searchParams = req.nextUrl.searchParams
+    const page = Number(searchParams.get('page')) || 1
+    const pageSize = Number(searchParams.get('pageSize')) || 10
+    const enterpriseId = searchParams.get('enterpriseId')
+    const startTime = searchParams.get('startTime')
+    const endTime = searchParams.get('endTime')
+    const status = searchParams.get('status')
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const keyword = searchParams.get('keyword');
-  const status = searchParams.get('status');
-  const startDate = searchParams.get('startDate');
-  const endDate = searchParams.get('endDate');
-  const page = parseInt(searchParams.get('page') || '1');
-  const pageSize = parseInt(searchParams.get('pageSize') || '10');
+    // 获取所有导入记录
+    let applications = db.importApplication.getAll()
 
-  let filteredData = [...mockImportRecords];
+    // 应用过滤
+    if (enterpriseId || startTime || endTime || status) {
+      applications = applications.filter(app => {
+        const matchEnterprise = enterpriseId
+          ? app.enterpriseId === enterpriseId
+          : true
+        const matchTimeRange = startTime && endTime
+          ? new Date(app.createdAt) >= new Date(startTime) && 
+            new Date(app.createdAt) <= new Date(endTime)
+          : true
+        const matchStatus = status
+          ? app.status === status
+          : true
+        return matchEnterprise && matchTimeRange && matchStatus
+      })
+    }
 
-  if (keyword) {
-    const lowercaseKeyword = keyword.toLowerCase();
-    filteredData = filteredData.filter(
-      item =>
-        item.enterpriseName.toLowerCase().includes(lowercaseKeyword) ||
-        item.approvalNo.toLowerCase().includes(lowercaseKeyword)
-    );
+    // 应用分页
+    const total = applications.length
+    const start = (page - 1) * pageSize
+    const end = start + pageSize
+    const items = applications.slice(start, end)
+
+    const response: APIResponse<typeof items> = {
+      code: 200,
+      message: 'success',
+      data: items,
+      pagination: {
+        current: page,
+        pageSize,
+        total
+      }
+    }
+
+    return NextResponse.json(response)
+  } catch (error) {
+    return NextResponse.json(
+      {
+        code: 500,
+        message: error instanceof Error ? error.message : '未知错误'
+      },
+      { status: 500 }
+    )
   }
-
-  if (status && status !== 'ALL') {
-    filteredData = filteredData.filter(item => item.status === status);
-  }
-
-  if (startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    filteredData = filteredData.filter(item => {
-      const plannedDate = new Date(item.importInfo.plannedDate);
-      return plannedDate >= start && plannedDate <= end;
-    });
-  }
-
-  // 模拟网络延迟
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  const total = filteredData.length;
-  const start = (page - 1) * pageSize;
-  const end = start + pageSize;
-  const data = filteredData.slice(start, end);
-
-  return NextResponse.json({
-    code: 200,
-    message: 'success',
-    data: {
-      list: data,
-      total,
-      page,
-      pageSize,
-    },
-  });
 }
 
-export async function POST(request: Request) {
-  const body = await request.json();
-  
-  // 模拟保存操作
-  await new Promise(resolve => setTimeout(resolve, 1000));
+// POST /api/enterprises/imports
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const now = new Date().toISOString()
 
-  const newRecord = {
-    ...body,
-    id: String(mockImportRecords.length + 1),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  return NextResponse.json({
-    code: 200,
-    message: 'success',
-    data: newRecord,
-  });
-}
-
-export async function PATCH(request: Request) {
-  const body = await request.json();
-  
-  // 模拟更新操作
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  return NextResponse.json({
-    code: 200,
-    message: 'success',
-    data: {
+    const application = db.importApplication.create({
       ...body,
-      updatedAt: new Date().toISOString(),
-    },
-  });
+      id: String(Date.now()),
+      status: 'PENDING',
+      createdAt: now,
+      updatedAt: now
+    })
+
+    const response: APIResponse<typeof application> = {
+      code: 200,
+      message: 'success',
+      data: application
+    }
+
+    return NextResponse.json(response)
+  } catch (error) {
+    return NextResponse.json(
+      {
+        code: 500,
+        message: error instanceof Error ? error.message : '未知错误'
+      },
+      { status: 500 }
+    )
+  }
+}
+
+// PATCH /api/enterprises/imports/[id]
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await req.json()
+    const now = new Date().toISOString()
+
+    const application = db.importApplication.update({
+      where: { id: { equals: String(params.id) } },
+      data: {
+        ...body,
+        updatedAt: now
+      }
+    })
+
+    const response: APIResponse<typeof application> = {
+      code: 200,
+      message: 'success',
+      data: application
+    }
+
+    return NextResponse.json(response)
+  } catch (error) {
+    return NextResponse.json(
+      {
+        code: 500,
+        message: error instanceof Error ? error.message : '未知错误'
+      },
+      { status: 500 }
+    )
+  }
 }
 
 export async function DELETE(request: Request) {

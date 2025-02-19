@@ -1,114 +1,105 @@
-import { NextResponse } from 'next/server';
-import { formatDate } from '@/lib/utils';
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/mocks/db'
+import { APIResponse } from '@/types/api'
 
-const mockEnterprises = Array.from({ length: 50 }, (_, index) => ({
-  id: `${index + 1}`,
-  code: `ENT${String(index + 1).padStart(3, '0')}`,
-  name: `示例企业${index + 1}`,
-  contact: {
-    address: `北京市海淀区示例路${index + 1}号`,
-    person: `联系人${index + 1}`,
-    phone: `1380013${String(index + 1).padStart(4, '0')}`,
-  },
-  status: index % 5 === 0 ? 'SUSPENDED' : 'ACTIVE',
-  syncTime: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-}));
+// GET /api/enterprises
+export async function GET(req: NextRequest) {
+  try {
+    const searchParams = req.nextUrl.searchParams
+    const page = Number(searchParams.get('page')) || 1
+    const pageSize = Number(searchParams.get('pageSize')) || 10
+    const keyword = searchParams.get('keyword')
+    const province = searchParams.get('province')
+    const city = searchParams.get('city')
+    const sortField = searchParams.get('sortField')
+    const sortOrder = searchParams.get('sortOrder') as 'ascend' | 'descend' | null
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const keyword = searchParams.get('keyword');
-  const status = searchParams.get('status');
-  const startDate = searchParams.get('startDate');
-  const endDate = searchParams.get('endDate');
-  const page = parseInt(searchParams.get('page') || '1');
-  const pageSize = parseInt(searchParams.get('pageSize') || '10');
-  const isExport = searchParams.get('export') === 'true';
+    // 获取所有企业
+    let enterprises = db.enterprise.findMany({})
 
-  let filteredData = [...mockEnterprises];
+    // 应用过滤
+    if (keyword || province || city) {
+      enterprises = enterprises.filter(enterprise => {
+        const matchKeyword = keyword 
+          ? enterprise.name.includes(keyword) || enterprise.code.includes(keyword)
+          : true
+        const matchProvince = province
+          ? enterprise.contact?.address?.includes(province) ?? false
+          : true
+        const matchCity = city
+          ? enterprise.contact?.address?.includes(city) ?? false
+          : true
+        return matchKeyword && matchProvince && matchCity
+      })
+    }
 
-  if (keyword) {
-    const lowercaseKeyword = keyword.toLowerCase();
-    filteredData = filteredData.filter(
-      item =>
-        item.name.toLowerCase().includes(lowercaseKeyword) ||
-        item.code.toLowerCase().includes(lowercaseKeyword)
-    );
-  }
+    // 应用排序
+    if (sortField && sortOrder) {
+      enterprises.sort((a, b) => {
+        const aValue = a[sortField as keyof typeof a] ?? ''
+        const bValue = b[sortField as keyof typeof b] ?? ''
+        return sortOrder === 'ascend'
+          ? String(aValue) > String(bValue) ? 1 : -1
+          : String(aValue) < String(bValue) ? 1 : -1
+      })
+    }
 
-  if (status && status !== 'ALL') {
-    filteredData = filteredData.filter(item => item.status === status);
-  }
+    // 应用分页
+    const total = enterprises.length
+    const start = (page - 1) * pageSize
+    const end = start + pageSize
+    const items = enterprises.slice(start, end)
 
-  if (startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    filteredData = filteredData.filter(item => {
-      const syncTime = new Date(item.syncTime);
-      return syncTime >= start && syncTime <= end;
-    });
-  }
-
-  // 模拟网络延迟
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  if (isExport) {
-    // 模拟导出数据
-    const headers = new Headers();
-    headers.append('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    headers.append('Content-Disposition', `attachment; filename=enterprises_${formatDate(new Date(), 'YYYY-MM-DD')}.xlsx`);
-
-    // 这里应该是真实的 Excel 文件内容
-    // 为了演示，我们返回一个空的 ArrayBuffer
-    return new Response(new ArrayBuffer(0), {
-      status: 200,
-      headers,
-    });
-  }
-
-  const total = filteredData.length;
-  const start = (page - 1) * pageSize;
-  const end = start + pageSize;
-  const data = filteredData.slice(start, end);
-
-  return NextResponse.json({
-    code: 200,
-    message: 'success',
-    data: {
-      list: data,
-      total,
-      page,
-      pageSize,
-    },
-  });
-}
-
-export async function POST(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const action = searchParams.get('action');
-
-  if (action === 'sync') {
-    // 模拟同步操作
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    return NextResponse.json({
+    const response: APIResponse<typeof items> = {
       code: 200,
       message: 'success',
-      data: {
-        syncCount: Math.floor(Math.random() * 10),
+      data: items,
+      pagination: {
+        current: page,
+        pageSize,
+        total
+      }
+    }
+
+    return NextResponse.json(response)
+  } catch (error) {
+    return NextResponse.json(
+      {
+        code: 500,
+        message: error instanceof Error ? error.message : '未知错误'
       },
-    });
+      { status: 500 }
+    )
   }
+}
 
-  const body = await request.json();
-  // 模拟保存操作
-  await new Promise(resolve => setTimeout(resolve, 1000));
+// POST /api/enterprises
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const now = new Date().toISOString()
 
-  return NextResponse.json({
-    code: 200,
-    message: 'success',
-    data: {
+    const enterprise = db.enterprise.create({
       ...body,
-      id: body.id || String(mockEnterprises.length + 1),
-      syncTime: new Date().toISOString(),
-    },
-  });
+      id: String(Date.now()),
+      createdAt: now,
+      updatedAt: now
+    })
+
+    const response: APIResponse<typeof enterprise> = {
+      code: 200,
+      message: 'success',
+      data: enterprise
+    }
+
+    return NextResponse.json(response)
+  } catch (error) {
+    return NextResponse.json(
+      {
+        code: 500,
+        message: error instanceof Error ? error.message : '未知错误'
+      },
+      { status: 500 }
+    )
+  }
 } 
