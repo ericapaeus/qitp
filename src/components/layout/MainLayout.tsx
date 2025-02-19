@@ -1,48 +1,39 @@
 'use client'
 
-import { useState } from 'react'
-import TopNavbar from './TopNavbar'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import Sidebar from './Sidebar'
+import TopNavbar from './TopNavbar'
 import Breadcrumb from './Breadcrumb'
 import Footer from './Footer'
-import { cn } from '@/lib/utils'
-import { TooltipProvider } from '@/components/ui/tooltip'
 
-interface MainLayoutProps {
-  children: React.ReactNode
-}
-
-export default function MainLayout({ children }: MainLayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
-
+export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
-      <TooltipProvider>
-        <TopNavbar />
-        <div className="flex">
-          <Sidebar isCollapsed={isCollapsed} onCollapse={setIsCollapsed} />
-          <div 
-            className={cn(
-              "flex-1 flex flex-col transition-[margin] duration-300 ease-in-out",
-              isCollapsed 
-                ? "lg:ml-[var(--sidebar-width-collapsed)]" 
-                : "lg:ml-[var(--sidebar-width)]"
-            )}
-          >
-            <div className="flex-1 flex flex-col pt-2">
-              <div className="px-4 sm:px-6 mb-4">
-                <Breadcrumb />
-              </div>
-              <main className="flex-1 px-4 sm:px-6 mx-auto w-full max-w-7xl">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  {children}
-                </div>
-              </main>
-              <Footer className="mt-6" />
+    <div className="flex flex-col h-screen overflow-hidden">
+      {/* 顶部导航栏 */}
+      <TopNavbar />
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* 侧边栏 */}
+        <Sidebar />
+
+        {/* 主内容区 */}
+        <ScrollArea className="flex-1">
+          <main className="min-h-full">
+            {/* 面包屑导航 */}
+            <div className="px-6 py-4 border-b bg-white">
+              <Breadcrumb />
             </div>
-          </div>
-        </div>
-      </TooltipProvider>
+
+            {/* 页面内容 */}
+            <div className="p-6">
+              {children}
+            </div>
+
+            {/* 页脚 */}
+            <Footer className="px-6 py-4 border-t bg-white" />
+          </main>
+        </ScrollArea>
+      </div>
     </div>
   )
 } 

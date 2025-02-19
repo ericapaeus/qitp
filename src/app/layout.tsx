@@ -1,15 +1,28 @@
-import type { Metadata } from "next";
+'use client'
+
 import { Inter } from "next/font/google";
 import "./globals.css";
 import MainLayout from "@/components/layout/MainLayout";
 import { Toaster } from '@/components/ui/toaster';
+import { QueryProvider } from '@/components/providers/QueryProvider';
+import { useEffect } from 'react';
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "检疫隔离试种信息管理系统",
-  description: "管理隔离试种的全流程信息",
-};
+function MSWComponent() {
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      const initMocks = async () => {
+        const { worker } = await import('@/mocks/browser')
+        await worker.start({
+          onUnhandledRequest: 'bypass'
+        })
+      }
+      initMocks()
+    }
+  }, [])
+  return null
+}
 
 export default function RootLayout({
   children,
@@ -19,8 +32,11 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={inter.className}>
-        <MainLayout>{children}</MainLayout>
-        <Toaster />
+        <QueryProvider>
+          <MSWComponent />
+          <MainLayout>{children}</MainLayout>
+          <Toaster />
+        </QueryProvider>
       </body>
     </html>
   );

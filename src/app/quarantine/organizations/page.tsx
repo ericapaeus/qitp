@@ -7,6 +7,9 @@ import { QuarantineOrganizationList } from '@/components/business/quarantine/Qua
 import { QuarantineOrganizationStats } from '@/components/business/quarantine/QuarantineOrganizationStats'
 import { QuarantineOrganizationForm } from '@/components/business/quarantine/QuarantineOrganizationForm'
 import { QuarantineOrganizationExport } from '@/components/business/quarantine/QuarantineOrganizationExport'
+import { QuarantineOrganizationHierarchy } from '@/components/business/quarantine/QuarantineOrganizationHierarchy'
+import { QuarantineOrganizationSyncRetry } from '@/components/business/quarantine/QuarantineOrganizationSyncRetry'
+import { QuarantineOrganizationDataCheck } from '@/components/business/quarantine/QuarantineOrganizationDataCheck'
 import { useToast } from '@/components/ui/use-toast'
 import type { FormValues } from '@/components/business/quarantine/QuarantineOrganizationForm'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -55,6 +58,26 @@ export default function QuarantineOrganizationsPage() {
     }
   }
 
+  const handleRetry = async (id: string) => {
+    // 模拟重试操作
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  }
+
+  const handleRetryAll = async () => {
+    // 模拟批量重试操作
+    await new Promise(resolve => setTimeout(resolve, 2000))
+  }
+
+  const handleDataCheck = async () => {
+    // 模拟数据检查操作
+    await new Promise(resolve => setTimeout(resolve, 1500))
+  }
+
+  const handleDataSync = async (ids: string[]) => {
+    // 模拟数据同步操作
+    await new Promise(resolve => setTimeout(resolve, 1500))
+  }
+
   return (
     <div className="space-y-6 p-6">
       <PageHeader
@@ -74,11 +97,83 @@ export default function QuarantineOrganizationsPage() {
       {/* 数据概览 */}
       <QuarantineOrganizationStats />
 
-      {/* 机构地图分布 */}
-      <Card className="p-6">
-        <div className="h-[400px] bg-muted rounded-lg flex items-center justify-center">
-          机构地理分布图（使用高德地图或其他地图服务）
-        </div>
+      {/* 机构层级和同步状态 */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* 机构层级关系 */}
+        <Card className="lg:col-span-2">
+          <QuarantineOrganizationHierarchy
+            data={[
+              {
+                id: '1',
+                code: 'QO001',
+                name: '北京市检疫中心',
+                level: 'PROVINCE',
+                status: 'ACTIVE',
+                children: [
+                  {
+                    id: '2',
+                    code: 'QO002',
+                    name: '北京市海淀区检疫站',
+                    level: 'CITY',
+                    status: 'ACTIVE',
+                  },
+                  {
+                    id: '3',
+                    code: 'QO003',
+                    name: '北京市朝阳区检疫站',
+                    level: 'CITY',
+                    status: 'SUSPENDED',
+                  },
+                ],
+              },
+              // ... 更多数据
+            ]}
+            onSelect={(node) => console.log('Selected:', node)}
+          />
+        </Card>
+
+        {/* 同步失败重试 */}
+        <Card>
+          <QuarantineOrganizationSyncRetry
+            failures={[
+              {
+                id: '1',
+                organizationId: '1',
+                organizationName: '北京市检疫中心',
+                type: 'ORGANIZATION',
+                errorMessage: '网络连接超时',
+                retryCount: 2,
+                lastRetryTime: '2024-02-13T08:00:00Z',
+                status: 'PENDING',
+                createdAt: '2024-02-13T06:00:00Z',
+              },
+              // ... 更多数据
+            ]}
+            onRetry={handleRetry}
+            onRetryAll={handleRetryAll}
+          />
+        </Card>
+      </div>
+
+      {/* 数据一致性检查 */}
+      <Card>
+        <QuarantineOrganizationDataCheck
+          differences={[
+            {
+              id: '1',
+              organizationId: '1',
+              organizationName: '北京市检疫中心',
+              type: 'ORGANIZATION',
+              field: 'status',
+              localValue: 'ACTIVE',
+              remoteValue: 'SUSPENDED',
+              checkTime: '2024-02-13T10:00:00Z',
+            },
+            // ... 更多数据
+          ]}
+          onCheck={handleDataCheck}
+          onSync={handleDataSync}
+        />
       </Card>
 
       {/* 机构列表 */}

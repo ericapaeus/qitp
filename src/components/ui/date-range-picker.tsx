@@ -15,161 +15,53 @@ import {
 import { zhCN } from 'date-fns/locale'
 
 interface DateRangePickerProps {
-  value?: DateRange
-  onChange?: (value: DateRange | undefined) => void
-  placeholder?: string
+  value: DateRange | undefined
+  onValueChange: (value: DateRange | undefined) => void
   className?: string
-  showShortcuts?: boolean
-  disabled?: boolean
 }
 
 export function DateRangePicker({
   value,
-  onChange,
-  placeholder = "选择日期范围",
+  onValueChange,
   className,
-  showShortcuts = true,
-  disabled = false,
 }: DateRangePickerProps) {
-  const [date, setDate] = React.useState<DateRange | undefined>(value)
-  const [open, setOpen] = React.useState(false)
-
-  React.useEffect(() => {
-    setDate(value)
-  }, [value])
-
-  const shortcuts = React.useMemo(() => [
-    {
-      label: '今天',
-      getValue: () => ({
-        from: startOfDay(new Date()),
-        to: endOfDay(new Date())
-      })
-    },
-    {
-      label: '昨天',
-      getValue: () => ({
-        from: startOfDay(addDays(new Date(), -1)),
-        to: endOfDay(addDays(new Date(), -1))
-      })
-    },
-    {
-      label: '本周',
-      getValue: () => ({
-        from: startOfWeek(new Date(), { weekStartsOn: 1 }),
-        to: endOfWeek(new Date(), { weekStartsOn: 1 })
-      })
-    },
-    {
-      label: '上周',
-      getValue: () => ({
-        from: startOfWeek(addDays(new Date(), -7), { weekStartsOn: 1 }),
-        to: endOfWeek(addDays(new Date(), -7), { weekStartsOn: 1 })
-      })
-    },
-    {
-      label: '本月',
-      getValue: () => ({
-        from: startOfMonth(new Date()),
-        to: endOfMonth(new Date())
-      })
-    },
-    {
-      label: '上月',
-      getValue: () => {
-        const start = startOfMonth(addDays(new Date(), -30))
-        return {
-          from: start,
-          to: endOfMonth(start)
-        }
-      }
-    },
-    {
-      label: '最近7天',
-      getValue: () => ({
-        from: addDays(new Date(), -6),
-        to: new Date()
-      })
-    },
-    {
-      label: '最近30天',
-      getValue: () => ({
-        from: addDays(new Date(), -29),
-        to: new Date()
-      })
-    }
-  ], [])
-
-  const handleSelect = React.useCallback((value: DateRange | undefined) => {
-    setDate(value)
-    onChange?.(value)
-    if (value?.from && value?.to) {
-      setOpen(false)
-    }
-  }, [onChange])
-
-  const handleShortcutClick = React.useCallback((getValue: () => DateRange) => {
-    const range = getValue()
-    setDate(range)
-    onChange?.(range)
-    setOpen(false)
-  }, [onChange])
-
   return (
-    <div className={cn("grid gap-2", className)}>
-      <Popover open={open} onOpenChange={disabled ? undefined : setOpen}>
+    <div className={cn('grid gap-2', className)}>
+      <Popover>
         <PopoverTrigger asChild>
           <Button
             id="date"
-            variant={"outline"}
+            variant={'outline'}
             className={cn(
-              "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground",
-              disabled && "opacity-50 cursor-not-allowed"
+              'w-[300px] justify-start text-left font-normal',
+              !value && 'text-muted-foreground'
             )}
-            disabled={disabled}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
+            {value?.from ? (
+              value.to ? (
                 <>
-                  {format(date.from, "yyyy-MM-dd")} ~{" "}
-                  {format(date.to, "yyyy-MM-dd")}
+                  {format(value.from, 'yyyy-MM-dd', { locale: zhCN })} ~{' '}
+                  {format(value.to, 'yyyy-MM-dd', { locale: zhCN })}
                 </>
               ) : (
-                format(date.from, "yyyy-MM-dd")
+                format(value.from, 'yyyy-MM-dd', { locale: zhCN })
               )
             ) : (
-              <span>{placeholder}</span>
+              <span>选择日期范围</span>
             )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <div className="flex">
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={date?.from}
-              selected={date}
-              onSelect={handleSelect}
-              numberOfMonths={2}
-              locale={zhCN}
-            />
-            {showShortcuts && (
-              <div className="border-l border-border p-2 space-y-2">
-                {shortcuts.map((shortcut, index) => (
-                  <Button
-                    key={index}
-                    variant="ghost"
-                    className="w-full justify-start text-left"
-                    onClick={() => handleShortcutClick(shortcut.getValue)}
-                  >
-                    {shortcut.label}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
+          <Calendar
+            initialFocus
+            mode="range"
+            defaultMonth={value?.from}
+            selected={value}
+            onSelect={onValueChange}
+            numberOfMonths={2}
+            locale={zhCN}
+          />
         </PopoverContent>
       </Popover>
     </div>
