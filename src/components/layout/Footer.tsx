@@ -9,7 +9,7 @@ export default function Footer({ className = '' }: FooterProps) {
   return (
     <footer className={className}>
       <div className="text-center text-sm text-gray-500">
-        <p>© 2024 检疫检测信息平台. All rights reserved.</p>
+        <p>© 2024 检疫隔离试种信息管理系统. All rights reserved.</p>
       </div>
     </footer>
   )

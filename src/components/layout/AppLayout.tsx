@@ -15,7 +15,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="container flex h-14 items-center">
             <div className="flex flex-1 items-center justify-between">
               <nav className="flex items-center space-x-6">
-                <h1 className="text-xl font-semibold">检疫检测信息平台</h1>
+                <h1 className="text-xl font-semibold">检疫隔离试种信息管理系统</h1>
               </nav>
               <div className="flex items-center space-x-4">
                 <NotificationList />
