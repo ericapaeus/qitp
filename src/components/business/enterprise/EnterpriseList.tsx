@@ -344,7 +344,7 @@ export function EnterpriseList() {
           <Label>同步时间</Label>
           <DateRangePicker
             value={searchParams.dateRange}
-            onChange={handleDateRangeChange}
+            onValueChange={handleDateRangeChange}
           />
         </div>
         <div className="flex items-end space-x-2">

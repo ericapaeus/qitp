@@ -320,7 +320,7 @@ export function QuarantineTaskList({ organizationId }: { organizationId: string 
           <Label>时间范围</Label>
           <DateRangePicker
             value={searchParams.dateRange}
-            onChange={range => setSearchParams(prev => ({ ...prev, dateRange: range }))}
+            onValueChange={range => setSearchParams(prev => ({ ...prev, dateRange: range }))}
           />
         </div>
         <div className="flex items-end space-x-2 md:col-span-4">

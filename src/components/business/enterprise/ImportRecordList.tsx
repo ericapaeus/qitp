@@ -402,7 +402,7 @@ export function ImportRecordList() {
           <Label>引进日期</Label>
           <DateRangePicker
             value={searchParams.dateRange}
-            onChange={range => setSearchParams(prev => ({ ...prev, dateRange: range }))}
+            onValueChange={range => setSearchParams(prev => ({ ...prev, dateRange: range }))}
           />
         </div>
         <div className="flex items-end space-x-2">

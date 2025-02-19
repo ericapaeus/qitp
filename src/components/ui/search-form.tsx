@@ -131,8 +131,7 @@ export function SearchForm({
             {field.type === 'dateRange' && (
               <DateRangePicker
                 value={values[field.name]}
-                onChange={value => handleInputChange(field.name, value)}
-                placeholder={field.placeholder}
+                onValueChange={value => handleInputChange(field.name, value)}
               />
             )}
           </div>

@@ -314,7 +314,7 @@ export function QuarantineResultList({ organizationId }: { organizationId: strin
           <Label>检疫日期</Label>
           <DateRangePicker
             value={searchParams.dateRange}
-            onChange={range => setSearchParams(prev => ({ ...prev, dateRange: range }))}
+            onValueChange={range => setSearchParams(prev => ({ ...prev, dateRange: range }))}
           />
         </div>
         <div className="flex items-end space-x-2 md:col-span-3">
