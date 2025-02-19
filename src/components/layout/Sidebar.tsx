@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { menuItems } from '@/config/menu'
 
 // 定义子菜单项类型
 interface SubMenuItem {
@@ -29,74 +30,6 @@ interface MenuItem {
   href: string
   items?: SubMenuItem[]
 }
-
-// 菜单配置
-const menuItems: MenuItem[] = [
-  {
-    title: '工作台',
-    icon: LayoutDashboard,
-    href: '/',
-  },
-  {
-    title: '隔离试种',
-    icon: Sprout,
-    href: '/isolation',
-    items: [
-      { title: '工作台', href: '/isolation/dashboard' },
-      { title: '预约送样', href: '/isolation/appointments' },
-      { title: '样品管理', href: '/isolation/samples' },
-      { title: '待办任务', href: '/isolation/tasks' },
-      { title: '检疫文书', href: '/isolation/certificates' }
-    ]
-  },
-  {
-    title: '实验室检验',
-    icon: TestTubes,
-    href: '/laboratory',
-    items: [
-      { title: '工作台', href: '/laboratory/dashboard' },
-      { title: '检验任务', href: '/laboratory/tasks' },
-      { title: '检验结果', href: '/laboratory/results' }
-    ]
-  },
-  {
-    title: '检疫机构',
-    icon: Building2,
-    href: '/quarantine-organizations',
-    items: [
-      { title: '机构管理', href: '/quarantine-organizations' },
-      { title: '人员管理', href: '/quarantine-organizations/staff' }
-    ]
-  },
-  {
-    title: '引种企业',
-    icon: Building,
-    href: '/enterprises',
-    items: [
-      { title: '企业管理', href: '/enterprises' },
-      { title: '联系人管理', href: '/enterprises/contacts' }
-    ]
-  },
-  {
-    title: '数据分析',
-    icon: BarChart3,
-    href: '/analysis',
-    items: [
-      { title: '检疫统计', href: '/analysis/quarantine' },
-      { title: '疫情分析', href: '/analysis/epidemics' }
-    ]
-  },
-  {
-    title: '系统设置',
-    icon: Settings,
-    href: '/settings',
-    items: [
-      { title: '用户管理', href: '/settings/users' },
-      { title: '角色权限', href: '/settings/roles' },
-      { title: '系统配置', href: '/settings/config' }
-    ]
-  }
-]
 
 export default function Sidebar() {
   const pathname = usePathname()

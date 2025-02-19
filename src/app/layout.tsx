@@ -2,12 +2,15 @@
 
 import { Inter } from "next/font/google";
 import "./globals.css";
-import MainLayout from "@/components/layout/MainLayout";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/toaster';
-import { QueryProvider } from '@/components/providers/QueryProvider';
+import { NotificationProvider } from '@/contexts/NotificationContext'
+import MainLayout from '@/components/layout/MainLayout'
 import { useEffect } from 'react';
 
 const inter = Inter({ subsets: ["latin"] });
+
+const queryClient = new QueryClient()
 
 function MSWComponent() {
   useEffect(() => {
@@ -32,11 +35,13 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={inter.className}>
-        <QueryProvider>
-          <MSWComponent />
-          <MainLayout>{children}</MainLayout>
+        <QueryClientProvider client={queryClient}>
+          <NotificationProvider>
+            <MainLayout>{children}</MainLayout>
+          </NotificationProvider>
           <Toaster />
-        </QueryProvider>
+        </QueryClientProvider>
+        <MSWComponent />
       </body>
     </html>
   );
